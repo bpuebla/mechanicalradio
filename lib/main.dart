@@ -16,9 +16,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Mechanical Radio',
       theme: ThemeData(
-        primaryColor: Colors.redAccent,
+        primarySwatch: Colors.red,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: ''),
       //page2,
       //page3,
     );
@@ -45,12 +45,52 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
+  bool _isPlaying = false;
+  bool _audioPlayed = false;
   AudioPlayer player = AudioPlayer();
   String audioasset = "assets/audio/sound1.mp3";
   late Uint8List audiobytes;
 
+  @override
+  void initState() {
+    Future.delayed(Duration.zero, () async {
+      ByteData bytes =
+          await rootBundle.load(audioasset); //load audio from assets
+      audiobytes =
+          bytes.buffer.asUint8List(bytes.offsetInBytes, bytes.lengthInBytes);
+      setState(() {});
+    });
+    super.initState();
+  }
+
   void _incrementCounter() {
     setState(() {});
+  }
+
+  void _togglePlaying() async {
+    if (_isPlaying && !_audioPlayed) {
+      int result = await player.pause();
+      if (result == 1) {
+        setState(() {
+          _isPlaying = false;
+        });
+      }
+    } else if (!_isPlaying && !_audioPlayed) {
+      int result = await player.playBytes(audiobytes);
+      if (result == 1) {
+        setState(() {
+          _isPlaying = true;
+          _audioPlayed = true;
+        });
+      }
+    } else {
+      int result = await player.resume();
+      if (result == 1) {
+        setState(() {
+          _isPlaying = true;
+        });
+      }
+    }
   }
 
   @override
@@ -88,13 +128,13 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             ElevatedButton(
-                onPressed: () {
-                  // pressed
-                },
-                child: const Icon(Icons.play_arrow)),
+                onPressed: _togglePlaying,
+                child: (_isPlaying
+                    ? const Icon(Icons.pause)
+                    : const Icon(Icons.play_arrow))),
             Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
+              'Press Play',
+              style: Theme.of(context).textTheme.headline5,
             ),
           ],
         ),
