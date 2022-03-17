@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'palette.dart';
 
 void main() {
   runApp(const MyApp());
@@ -16,7 +17,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Mechanical Radio',
       theme: ThemeData(
-        primarySwatch: Colors.red,
+        primarySwatch: Palette.greenTone,
       ),
       home: const MyHomePage(title: ''),
       //page2,
@@ -44,7 +45,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
   bool _isPlaying = false;
   bool _audioPlayed = false;
   AudioPlayer player = AudioPlayer();
@@ -63,12 +63,8 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
   }
 
-  void _incrementCounter() {
-    setState(() {});
-  }
-
   void _togglePlaying() async {
-    if (_isPlaying && !_audioPlayed) {
+    if (_isPlaying && _audioPlayed) {
       int result = await player.pause();
       if (result == 1) {
         setState(() {
@@ -140,7 +136,9 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
+        onPressed: () {
+          //nothing
+        },
         tooltip: 'Increment',
         child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
