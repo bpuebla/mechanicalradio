@@ -3,6 +3,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'palette.dart';
+import 'web.dart' as web;
 
 void main() {
   runApp(const MyApp());
@@ -81,6 +82,7 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
