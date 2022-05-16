@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
@@ -39,6 +40,9 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  String radioText = '';
+  late Timer timer;
+
   bool _isPlaying = false;
   bool _audioPlayed = false;
   AudioPlayer player = AudioPlayer();
@@ -47,6 +51,11 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void initState() {
+
+
+
+
+    // audioplay
     Future.delayed(Duration.zero, () async {
       ByteData bytes =
           await rootBundle.load(audioasset); //load audio from assets
@@ -54,7 +63,22 @@ class _MyHomePageState extends State<MyHomePage> {
           bytes.buffer.asUint8List(bytes.offsetInBytes, bytes.lengthInBytes);
       setState(() {});
     });
+
+    
+
     super.initState();
+    //timing
+    radioText = await getParagraph(0);
+    var count = 0;
+    timer = Timer.periodic(const Duration(seconds: 10), (Timer t) {
+      count += 1; 
+      radioText = await getParagraph(count);
+    });
+    
+  }
+  @override
+  void dispose(){
+    timer.cancel();
   }
 
   void _togglePlaying() async {
@@ -84,6 +108,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
 
+  Future<String> getParagraph(count) async{
+    if 
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -95,17 +123,18 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: <Widget>[
             const MyCustomForm(),
-            Column(children: [
+            Row(children: [
               ElevatedButton(
                   onPressed: _togglePlaying,
                   child: (_isPlaying
                       ? const Icon(Icons.pause)
                       : const Icon(Icons.play_arrow))),
-              Text(
+              
+            ]),
+            Text(
                 'Press Play',
                 style: Theme.of(context).textTheme.headline5,
               ),
-            ]),
           ],
         ),
       ),
@@ -122,6 +151,19 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
+"""
+class RadioText extends Text{
+  RadioText(String data) : super(data);
+
+}
+
+class RadioTextState extends State<StatefulWidget>{
+  @override
+  Widget build(BuildContext context) {
+    
+  }
+
+}"""
 
 class MyCustomForm extends StatefulWidget {
   const MyCustomForm({Key? key}) : super(key: key);
