@@ -3,8 +3,10 @@ import 'dart:typed_data';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'palette.dart';
-import 'web.dart' as web;
+import 'web.dart';
+import 'dart:io'; // later internet connection check
 
 void main() {
   runApp(const MyApp());
@@ -42,6 +44,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   String radioText = '';
   late Timer timer;
+  FlutterTts flutterTts = FlutterTts();
 
   bool _isPlaying = false;
   bool _audioPlayed = false;
@@ -49,12 +52,11 @@ class _MyHomePageState extends State<MyHomePage> {
   String audioasset = "assets/audio/sound1.mp3";
   late Uint8List audiobytes;
 
+  MyCustomForm itemForm = MyCustomForm();
+  MyCustomForm cityForm = MyCustomForm();
+
   @override
-  void initState() {
-
-
-
-
+  void initState() async {
     // audioplay
     Future.delayed(Duration.zero, () async {
       ByteData bytes =
@@ -64,23 +66,73 @@ class _MyHomePageState extends State<MyHomePage> {
       setState(() {});
     });
 
-    
-
     super.initState();
     //timing
-    radioText = await getParagraph(0);
-    var count = 0;
-    timer = Timer.periodic(const Duration(seconds: 10), (Timer t) {
-      count += 1; 
-      radioText = await getParagraph(count);
-    });
-    
+    periodicInfo();
   }
+
   @override
-  void dispose(){
+  void dispose() {
     timer.cancel();
   }
 
+  // webget
+  void periodicInfo() async {
+    var localNewsTitles = await googleNews();
+    int localNewsIndex = 0;
+
+    radioText = await webGet(0, localNewsTitles, localNewsIndex);
+
+    int count = 0;
+
+    timer = Timer.periodic(const Duration(seconds: 10), (Timer t) async {
+      localNewsIndex += 1;
+      count += 1;
+
+      if (count > 4) {
+        //reduce
+        count = count % 5;
+      }
+
+      if (localNewsIndex > localNewsTitles.length) {
+        localNewsIndex = localNewsIndex % (localNewsTitles.length + 1);
+      }
+
+      radioText = await webGet(count, localNewsTitles, localNewsIndex);
+      if (_isPlaying) {
+        flutterTts.speak(radioText);
+      }
+    });
+  }
+
+  Future<String> webGet(item, titles, index, {form, city = 'vienna'}) async {
+    String information = 'There was an error';
+    if (form == null || form == '') {
+      // TO BE REMOVED ONLY TESTING
+      item -= 1;
+    }
+    switch (item) {
+      case 0:
+        information = await getCurrentWeather(city);
+        break;
+      case 1:
+        information = getLocalNewsTitle(titles, index);
+        break;
+      case 2:
+        information = await bbcnews(3);
+        break;
+      case 3:
+        information = await getDayWeather(city);
+        break;
+      case 4:
+        information = await wikipedia(form);
+        break;
+    }
+
+    return information;
+  }
+
+  // player
   void _togglePlaying() async {
     if (_isPlaying && _audioPlayed) {
       int result = await player.pause();
@@ -107,10 +159,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-
-  Future<String> getParagraph(count) async{
-    if 
-  }
+  // Form
 
   @override
   Widget build(BuildContext context) {
@@ -122,19 +171,18 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: <Widget>[
-            const MyCustomForm(),
+            MyCustomForm(),
             Row(children: [
               ElevatedButton(
                   onPressed: _togglePlaying,
                   child: (_isPlaying
                       ? const Icon(Icons.pause)
                       : const Icon(Icons.play_arrow))),
-              
             ]),
             Text(
-                'Press Play',
-                style: Theme.of(context).textTheme.headline5,
-              ),
+              'Press Play',
+              style: Theme.of(context).textTheme.headline5,
+            ),
           ],
         ),
       ),
@@ -151,22 +199,11 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
-"""
-class RadioText extends Text{
-  RadioText(String data) : super(data);
-
-}
-
-class RadioTextState extends State<StatefulWidget>{
-  @override
-  Widget build(BuildContext context) {
-    
-  }
-
-}"""
 
 class MyCustomForm extends StatefulWidget {
   const MyCustomForm({Key? key}) : super(key: key);
+
+  set controllerText(String controllerText) {}
 
   @override
   MyCustomFormState createState() {
@@ -183,16 +220,18 @@ class MyCustomFormState extends State<MyCustomForm> {
   // Note: This is a GlobalKey<FormState>,
   // not a GlobalKey<MyCustomFormState>.
   final _formKey = GlobalKey<FormState>();
+  TextEditingController controller = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     // Build a Form widget using the _formKey created above.
-    return Form(
+    var form = Form(
       key: _formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           TextFormField(
+            controller: controller,
             // The validator receives the text that the user has entered.
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -220,5 +259,7 @@ class MyCustomFormState extends State<MyCustomForm> {
         ],
       ),
     );
+    widget.controllerText = controller.text;
+    return form;
   }
 }

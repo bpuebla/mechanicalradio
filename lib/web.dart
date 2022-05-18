@@ -16,6 +16,7 @@ Future<Document> fetchDocument(link) async {
   }
 }
 
+// BBC WORLD NEWS
 Future<String> bbcnews(number) async {
   var articlesLinks = [];
 
@@ -36,6 +37,27 @@ Future<String> bbcnews(number) async {
     }
   }
   return '';
+}
+
+// BBC NEWS FIXED
+
+Future<String> bbcnews2(number) async {
+  var document = await fetchDocument("https://www.bbc.com/news/world");
+
+  var articles = document.getElementsByTagName("h3");
+  articles.removeAt(0); // first one is duplicated
+  //print(articles_links);
+  var linkEnd = articles[number].parent?.attributes['href'];
+  var articleLink = "https://www.bbc.com" + linkEnd!;
+  document = await fetchDocument(articleLink);
+  var title = document.getElementsByTagName('h1');
+  var paragraphs = document.getElementsByTagName('p');
+  paragraphs.insert(0, title[0]);
+  var information = '';
+  for (var i = 0; i <= 3; i++) {
+    information += paragraphs[i].text + ' ';
+  }
+  return information;
 }
 
 // Weather parsing
@@ -109,7 +131,18 @@ Future<String> weather(city, current) async {
   }
 }
 
-Future<List<Element>> google_news() async {
+Future<String> getCurrentWeather(city) async {
+  String currentWeather = await weather(city, true);
+  return currentWeather;
+}
+
+Future<String> getDayWeather(city) async {
+  String dayWeather = await weather(city, false);
+  return dayWeather;
+}
+
+// LOCAL NEWS TITLES
+Future<List<Element>> googleNews() async {
   var document = await fetchDocument(
       'https://news.google.com/topics/CAAqHAgKIhZDQklTQ2pvSWJHOWpZV3hmZGpJb0FBUAE?hl=en');
   var titles = document.getElementsByTagName('h3');
@@ -125,6 +158,7 @@ String getLocalNewsTitle(titles, index) {
   return titles[index].text;
 }
 
+// WIKIPEDIA INFO
 Future<String> wikipedia(String spacedQuery) async {
   var query = spacedQuery.replaceAll(' ', '%20');
   print(query);
@@ -156,27 +190,9 @@ Future<String> wikipedia(String spacedQuery) async {
   return (information);
 }
 
-void webGet(item, {city = 'vienna'}) {
-  var information;
-  switch (item) {
-    case 0:
-      information = weather(city, 0);
-      break;
-    case 1:
-      information = google_news();
-      break;
-    case 2:
-      information = bbcnews(3);
-      break;
-    case 3:
-  }
-
-  return information;
-}
-
 void main() async {
   //var lol = await wikipedia('diego maradona');
   //weather('vienna', true);
-  var localNews = await google_news();
+  var localNews = await googleNews();
   print(getLocalNewsTitle(localNews, 0));
 }
