@@ -66,6 +66,9 @@ Future<String> weather(city, current) async {
   String forecastNowAddr;
   String forecastTodayAddr;
 
+  if (city == null) {
+    return 'No weather info about city';
+  }
   var document = await fetchDocument(
       "https://www.accuweather.com/en/search-locations?query=" + city);
   var results =
@@ -183,16 +186,15 @@ Future<String> wikipedia(String spacedQuery) async {
     textParagraphs.removeAt(0);
     //print('removed');
   }
-  var information = textParagraphs[0]
-      .text
-      .replaceAllMapped(RegExp(r'\[.*?\]'), (match) => '');
+  var information = textParagraphs[0].text.replaceAllMapped(
+      RegExp(r'\[.*?\]'), (match) => ''); //remove [1] from the text
   //print(information);
   return (information);
 }
 
 void main() async {
   //var lol = await wikipedia('diego maradona');
-  //weather('vienna', true);
-  var localNews = await googleNews();
-  print(getLocalNewsTitle(localNews, 0));
+  getCurrentWeather('cadiz');
+  //var localNews = await googleNews();
+  //print(getLocalNewsTitle(localNews, 0));
 }

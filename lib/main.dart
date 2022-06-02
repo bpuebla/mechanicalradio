@@ -43,7 +43,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   String radioText = '';
-  late Timer timer;
+  var timer;
   FlutterTts flutterTts = FlutterTts();
 
   bool _isPlaying = false;
@@ -56,24 +56,26 @@ class _MyHomePageState extends State<MyHomePage> {
   MyCustomForm cityForm = MyCustomForm();
 
   @override
-  void initState() async {
+  void initState() {
     // audioplay
-    Future.delayed(Duration.zero, () async {
-      ByteData bytes =
-          await rootBundle.load(audioasset); //load audio from assets
-      audiobytes =
-          bytes.buffer.asUint8List(bytes.offsetInBytes, bytes.lengthInBytes);
-      setState(() {});
-    });
+    //Future.delayed(Duration.zero, () async {
+    //  ByteData bytes =
+    //      await rootBundle.load(audioasset); //load audio from assets
+    //  audiobytes =
+    //      bytes.buffer.asUint8List(bytes.offsetInBytes, bytes.lengthInBytes);
+    //  setState(() {});
+    //});
 
     super.initState();
     //timing
-    periodicInfo();
+    //periodicInfo();
   }
 
   @override
   void dispose() {
-    timer.cancel();
+    if (timer != null) {
+      timer.cancel();
+    }
   }
 
   // webget
@@ -95,6 +97,7 @@ class _MyHomePageState extends State<MyHomePage> {
       }
 
       if (localNewsIndex > localNewsTitles.length) {
+        // to be corrected
         localNewsIndex = localNewsIndex % (localNewsTitles.length + 1);
       }
 
@@ -119,7 +122,7 @@ class _MyHomePageState extends State<MyHomePage> {
         information = getLocalNewsTitle(titles, index);
         break;
       case 2:
-        information = await bbcnews(3);
+        information = await bbcnews2(1);
         break;
       case 3:
         information = await getDayWeather(city);
@@ -135,27 +138,30 @@ class _MyHomePageState extends State<MyHomePage> {
   // player
   void _togglePlaying() async {
     if (_isPlaying && _audioPlayed) {
-      int result = await player.pause();
-      if (result == 1) {
-        setState(() {
-          _isPlaying = false;
-        });
-      }
+      //int result = await player.pause();
+      //if (result == 1) {
+      dispose();
+      setState(() {
+        _isPlaying = false;
+      });
+      //}
     } else if (!_isPlaying && !_audioPlayed) {
-      int result = await player.playBytes(audiobytes);
-      if (result == 1) {
-        setState(() {
-          _isPlaying = true;
-          _audioPlayed = true;
-        });
-      }
+      //int result = await player.playBytes(audiobytes);
+      //if (result == 1) {
+      periodicInfo();
+      setState(() {
+        _isPlaying = true;
+        _audioPlayed = true;
+      });
+      //}
     } else {
-      int result = await player.resume();
-      if (result == 1) {
-        setState(() {
-          _isPlaying = true;
-        });
-      }
+      //int result = await player.resume();
+      //if (result == 1) {
+      periodicInfo();
+      setState(() {
+        _isPlaying = true;
+      });
+      //}
     }
   }
 
@@ -172,12 +178,14 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: <Widget>[
             MyCustomForm(),
+            MyCustomForm(),
             Row(children: [
-              ElevatedButton(
-                  onPressed: _togglePlaying,
-                  child: (_isPlaying
-                      ? const Icon(Icons.pause)
-                      : const Icon(Icons.play_arrow))),
+              Center(
+                  child: ElevatedButton(
+                      onPressed: _togglePlaying,
+                      child: (_isPlaying
+                          ? const Icon(Icons.pause)
+                          : const Icon(Icons.play_arrow)))),
             ]),
             Text(
               'Press Play',
