@@ -44,6 +44,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   String radioText = '';
   var timer;
+  var news;
   FlutterTts flutterTts = FlutterTts();
 
   bool _isPlaying = false;
@@ -51,10 +52,26 @@ class _MyHomePageState extends State<MyHomePage> {
   AudioPlayer player = AudioPlayer();
   String audioasset = "assets/audio/sound1.mp3";
   late Uint8List audiobytes;
+  var topicText;
+  var cityText;
+  var itemForm;
+  var cityForm;
+  createThings() {
+    itemForm = MyTextFormField(
+        hintText: 'Enter a topic...',
+        onSaved: (String? value) {
+          topicText = value;
+        });
+    cityForm = MyTextFormField(
+        hintText: 'Enter a city',
+        onSaved: (String? value) {
+          cityText = value;
+        });
+  }
+  //String cityFormText = cityForm.getCont;
 
-  MyCustomForm itemForm = MyCustomForm();
-  MyCustomForm cityForm = MyCustomForm();
-
+  num localIndex = 0;
+  num worldIndex = 0;
   @override
   void initState() {
     // audioplay
@@ -67,12 +84,15 @@ class _MyHomePageState extends State<MyHomePage> {
     //});
 
     super.initState();
+    createThings();
+
+    news = fetchAllNews();
     //timing
+
     //periodicInfo();
   }
 
-  @override
-  void dispose() {
+  void disposeTimer() {
     if (timer != null) {
       timer.cancel();
     }
@@ -80,35 +100,33 @@ class _MyHomePageState extends State<MyHomePage> {
 
   // webget
   void periodicInfo() async {
-    var localNewsTitles = await googleNews();
-    int localNewsIndex = 0;
-
-    radioText = await webGet(0, localNewsTitles, localNewsIndex);
+    radioText = await webGet(0);
 
     int count = 0;
 
     timer = Timer.periodic(const Duration(seconds: 10), (Timer t) async {
-      localNewsIndex += 1;
+      localIndex += 1;
       count += 1;
 
       if (count > 4) {
         //reduce
         count = count % 5;
       }
-
-      if (localNewsIndex > localNewsTitles.length) {
+      if (localIndex > news['local'].length) {
         // to be corrected
-        localNewsIndex = localNewsIndex % (localNewsTitles.length + 1);
+        localIndex = localIndex % (news['local'].length + 1);
       }
 
-      radioText = await webGet(count, localNewsTitles, localNewsIndex);
+      radioText = await webGet(count);
       if (_isPlaying) {
         flutterTts.speak(radioText);
       }
     });
   }
 
-  Future<String> webGet(item, titles, index, {form, city = 'vienna'}) async {
+  //String getNews(item, index) {}
+
+  Future<String> webGet(item, {form, city = 'vienna'}) async {
     String information = 'There was an error';
     if (form == null || form == '') {
       // TO BE REMOVED ONLY TESTING
@@ -116,19 +134,19 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     switch (item) {
       case 0:
-        information = await getCurrentWeather(city);
+        information = news['currweather'];
         break;
       case 1:
-        information = getLocalNewsTitle(titles, index);
+        information = news['local'][localIndex];
         break;
       case 2:
-        information = await bbcnews2(1);
+        information = await bbcnews2Article(news['world'], worldIndex);
         break;
       case 3:
-        information = await getDayWeather(city);
+        information = news['dayweather'];
         break;
       case 4:
-        information = await wikipedia(form);
+        information = news['topic'];
         break;
     }
 
@@ -140,7 +158,7 @@ class _MyHomePageState extends State<MyHomePage> {
     if (_isPlaying && _audioPlayed) {
       //int result = await player.pause();
       //if (result == 1) {
-      dispose();
+      disposeTimer();
       setState(() {
         _isPlaying = false;
       });
@@ -177,8 +195,8 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: <Widget>[
-            MyCustomForm(),
-            MyCustomForm(),
+            cityForm,
+            itemForm,
             Row(children: [
               Center(
                   child: ElevatedButton(
@@ -207,11 +225,25 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
+/*
+/*
+
+Custom Form Builder
+
+Passes text to the HomePageState
+
+*/
 
 class MyCustomForm extends StatefulWidget {
   const MyCustomForm({Key? key}) : super(key: key);
 
-  set controllerText(String controllerText) {}
+  String _controllerText;
+
+  String get controllerText => 'test';
+
+  set controllerText(String controllerText) {
+    _controllerText = controllerText;
+  }
 
   @override
   MyCustomFormState createState() {
@@ -254,8 +286,6 @@ class MyCustomFormState extends State<MyCustomForm> {
               onPressed: () {
                 // Validate returns true if the form is valid, or false otherwise.
                 if (_formKey.currentState!.validate()) {
-                  // If the form is valid, display a snackbar. In the real world,
-                  // you'd often call a server or save the information in a database.
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Processing Data')),
                   );
@@ -267,7 +297,43 @@ class MyCustomFormState extends State<MyCustomForm> {
         ],
       ),
     );
-    widget.controllerText = controller.text;
+    widget.controllerText(controller.text);
     return form;
+  }
+}
+
+*/
+
+/* New Form */
+
+class MyTextFormField extends StatelessWidget {
+  final String hintText;
+  final void Function(String?)? onSaved;
+
+  MyTextFormField({
+    required this.hintText,
+    required this.onSaved,
+  });
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.all(8.0),
+      child: TextFormField(
+        decoration: InputDecoration(
+          hintText: hintText,
+          contentPadding: EdgeInsets.all(15.0),
+          border: InputBorder.none,
+          filled: true,
+          fillColor: Colors.grey[200],
+        ),
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Please enter some text';
+          }
+          return null;
+        },
+        onSaved: onSaved,
+      ),
+    );
   }
 }

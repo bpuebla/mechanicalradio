@@ -1,9 +1,20 @@
 import 'package:html/dom.dart';
-import 'package:web_scraper/web_scraper.dart';
 import 'package:http/http.dart' as http;
 import 'package:html/parser.dart';
 
 export 'web.dart';
+
+Future<Map> fetchAllNews({query, city = 'vienna'}) async {
+  var news = new Map();
+  news['local'] = googleNews();
+  news['world'] = bbcNews();
+  news['currweather'] = getCurrentWeather(city);
+  news['dayweather'] = getDayWeather(city);
+  if (query != null) {
+    news['topic'] = wikipedia(query);
+  }
+  return news;
+}
 
 Future<Document> fetchDocument(link) async {
   // get html doc of link
@@ -17,7 +28,7 @@ Future<Document> fetchDocument(link) async {
 }
 
 // BBC WORLD NEWS
-Future<String> bbcnews(number) async {
+Future<String> bbcnews2(number) async {
   var articlesLinks = [];
 
   var document = await fetchDocument("https://www.bbc.com/news/world");
@@ -41,17 +52,26 @@ Future<String> bbcnews(number) async {
 
 // BBC NEWS FIXED
 
-Future<String> bbcnews2(number) async {
+Future<String> bbcNews() async {
   var document = await fetchDocument("https://www.bbc.com/news/world");
 
   var articles = document.getElementsByTagName("h3");
   articles.removeAt(0); // first one is duplicated
   //print(articles_links);
-  var linkEnd = articles[number].parent?.attributes['href'];
-  var articleLink = "https://www.bbc.com" + linkEnd!;
-  document = await fetchDocument(articleLink);
-  var title = document.getElementsByTagName('h1');
-  var paragraphs = document.getElementsByTagName('p');
+  var articleList;
+  for (var i = 0; i < articles.length; i++) {
+    var item = await bbcnews2Article(articles, i);
+    articleList.add(item);
+  }
+  return articleList;
+}
+
+Future<String> bbcnews2Article(articles, number) async {
+  final linkEnd = articles[number].parent.attributes['href'];
+  final articleLink = "https://www.bbc.com" + linkEnd;
+  final document = await fetchDocument(articleLink);
+  final title = document.getElementsByTagName('h1');
+  final paragraphs = document.getElementsByTagName('p');
   paragraphs.insert(0, title[0]);
   var information = '';
   for (var i = 0; i <= 3; i++) {
@@ -149,7 +169,11 @@ Future<List<Element>> googleNews() async {
   var document = await fetchDocument(
       'https://news.google.com/topics/CAAqHAgKIhZDQklTQ2pvSWJHOWpZV3hmZGpJb0FBUAE?hl=en');
   var titles = document.getElementsByTagName('h3');
-  return titles;
+  var titleList;
+  for (var i; i < titles.length; i++) {
+    titleList.add(titles[i].text);
+  }
+  return titleList;
 
   //get actual city news
 }
