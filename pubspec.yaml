@@ -29,7 +29,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  audioplayers: ^0.20.1
+  audioplayers: ^1.0.0
   web_scraper:
   html:
   http:
