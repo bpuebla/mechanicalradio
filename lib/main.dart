@@ -56,22 +56,70 @@ class _MyHomePageState extends State<MyHomePage> {
   var cityText;
   var itemForm;
   var cityForm;
-  createThings() {
+  var totalForm;
+
+  num localNewsIndex = 0;
+  num worldNewsIndex = 0;
+
+  reduceLocal() {
+    localNewsIndex += 1;
+    if (localNewsIndex > news['local'].length - 1) {
+      //reduce
+      localNewsIndex = localNewsIndex % news['local'].length;
+    }
+  }
+
+  reduceWorld() {
+    worldNewsIndex += 1;
+    if (worldNewsIndex > news['world'].length - 1) {
+      //reduce
+      worldNewsIndex = worldNewsIndex % news['world'].length;
+    }
+  }
+
+  void createThings() {
+    final formKey = GlobalKey<FormState>();
     itemForm = MyTextFormField(
         hintText: 'Enter a topic...',
         onSaved: (String? value) {
+          updateTopic(value);
           topicText = value;
         });
     cityForm = MyTextFormField(
         hintText: 'Enter a city',
         onSaved: (String? value) {
+          updateCity(value);
           cityText = value;
         });
+
+    ElevatedButton button = ElevatedButton(
+        onPressed: () {
+          if (formKey.currentState!.validate()) {
+            formKey.currentState!.save();
+          }
+        },
+        child: const Text('Save All'));
+
+    totalForm = Form(
+        key: formKey,
+        child: Column(
+          children: [itemForm, cityForm, button],
+        ));
+  }
+
+  void updateTopic(query) async {
+    news['topic'] = await wikipedia(query);
+  }
+
+  void updateCity(query) async {
+    news['currweather'] = await getCurrentWeather(query);
+    news['dayweather'] = await getDayWeather(query);
   }
   //String cityFormText = cityForm.getCont;
 
   num localIndex = 0;
   num worldIndex = 0;
+  var newsLoaded = false;
   @override
   void initState() {
     // audioplay
@@ -85,11 +133,15 @@ class _MyHomePageState extends State<MyHomePage> {
 
     super.initState();
     createThings();
-
-    news = fetchAllNews();
+    createNews();
     //timing
 
     //periodicInfo();
+  }
+
+  void createNews() async {
+    news = await fetchAllNews();
+    newsLoaded = true;
   }
 
   void disposeTimer() {
@@ -100,53 +152,62 @@ class _MyHomePageState extends State<MyHomePage> {
 
   // webget
   void periodicInfo() async {
-    radioText = await webGet(0);
+    radioText = webGet(0);
 
     int count = 0;
 
-    timer = Timer.periodic(const Duration(seconds: 10), (Timer t) async {
-      localIndex += 1;
-      count += 1;
+    timer = Timer.periodic(const Duration(seconds: 15), (Timer t) async {
+      //localIndex += 1;
+      print(radioText);
+      if (_isPlaying) {
+        flutterTts.speak(radioText);
+        player.resume();
+        await flutterTts.awaitSpeakCompletion(true);
+      }
 
+      count += 1;
       if (count > 4) {
         //reduce
         count = count % 5;
       }
-      if (localIndex > news['local'].length) {
-        // to be corrected
-        localIndex = localIndex % (news['local'].length + 1);
-      }
 
-      radioText = await webGet(count);
-      if (_isPlaying) {
-        flutterTts.speak(radioText);
-      }
+      radioText = webGet(count);
     });
   }
 
   //String getNews(item, index) {}
 
-  Future<String> webGet(item, {form, city = 'vienna'}) async {
+  String webGet(item, {form, city = 'vienna'}) {
     String information = 'There was an error';
-    if (form == null || form == '') {
-      // TO BE REMOVED ONLY TESTING
-      item -= 1;
-    }
     switch (item) {
       case 0:
+        player.setSourceAsset("audio/sound1.mp3");
         information = news['currweather'];
         break;
       case 1:
+        player.setSourceAsset("audio/localforecast.mp3");
         information = news['local'][localIndex];
+        reduceLocal();
         break;
       case 2:
-        information = await bbcnews2Article(news['world'], worldIndex);
+        player.setSourceAsset("audio/sound1.mp3");
+        information = news['world'][worldIndex];
+        reduceWorld();
         break;
       case 3:
+        player.setSourceAsset("audio/sound1.mp3");
         information = news['dayweather'];
         break;
       case 4:
-        information = news['topic'];
+        if (news['topic'] != null) {
+          player.setSourceAsset("audio/sound1.mp3");
+          information = news['topic'];
+        } else {
+          // if no topic give more world news
+          player.setSourceAsset("audio/sound1.mp3");
+          information = news['world'][worldIndex];
+          reduceWorld();
+        }
         break;
     }
 
@@ -197,13 +258,12 @@ class _MyHomePageState extends State<MyHomePage> {
           children: <Widget>[
             cityForm,
             itemForm,
-            Row(children: [
-              Center(
-                  child: ElevatedButton(
-                      onPressed: _togglePlaying,
-                      child: (_isPlaying
-                          ? const Icon(Icons.pause)
-                          : const Icon(Icons.play_arrow)))),
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              ElevatedButton(
+                  onPressed: _togglePlaying,
+                  child: (_isPlaying
+                      ? const Icon(Icons.pause)
+                      : const Icon(Icons.play_arrow))),
             ]),
             Text(
               'Press Play',
@@ -304,11 +364,14 @@ class MyCustomFormState extends State<MyCustomForm> {
 
 */
 
+/* Full form */
+
 /* New Form */
 
 class MyTextFormField extends StatelessWidget {
   final String hintText;
   final void Function(String?)? onSaved;
+  final _keyForm = GlobalKey<FormState>();
 
   MyTextFormField({
     required this.hintText,
@@ -317,6 +380,7 @@ class MyTextFormField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
+      key: key,
       padding: EdgeInsets.all(8.0),
       child: TextFormField(
         decoration: InputDecoration(
@@ -335,5 +399,35 @@ class MyTextFormField extends StatelessWidget {
         onSaved: onSaved,
       ),
     );
+  }
+}
+
+class MyRadio {
+  //package radio elements in object, TODO
+  String radioText = '';
+  var timer;
+  var news;
+  FlutterTts flutterTts = FlutterTts();
+
+  bool _isPlaying = false;
+  bool _audioPlayed = false;
+  AudioPlayer player = AudioPlayer();
+  String audioasset = "assets/audio/sound1.mp3";
+  late Uint8List audiobytes;
+  var topicText;
+  var cityText;
+  var itemForm;
+  var cityForm;
+  createThings() {
+    itemForm = MyTextFormField(
+        hintText: 'Enter a topic...',
+        onSaved: (String? value) {
+          topicText = value;
+        });
+    cityForm = MyTextFormField(
+        hintText: 'Enter a city',
+        onSaved: (String? value) {
+          cityText = value;
+        });
   }
 }

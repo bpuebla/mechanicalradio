@@ -6,10 +6,14 @@ export 'web.dart';
 
 Future<Map> fetchAllNews({query, city = 'vienna'}) async {
   var news = new Map();
-  news['local'] = googleNews();
-  news['world'] = bbcNews();
-  news['currweather'] = getCurrentWeather(city);
-  news['dayweather'] = getDayWeather(city);
+  print('fetching 1');
+  news['local'] = await googleNews();
+  print('fetching 2');
+  news['world'] = await bbcNews();
+  print('fetching 3');
+  news['currweather'] = await getCurrentWeather(city);
+  print('fetching 4');
+  news['dayweather'] = await getDayWeather(city);
   if (query != null) {
     news['topic'] = wikipedia(query);
   }
@@ -28,6 +32,7 @@ Future<Document> fetchDocument(link) async {
 }
 
 // BBC WORLD NEWS
+/*
 Future<String> bbcnews2(number) async {
   var articlesLinks = [];
 
@@ -48,34 +53,39 @@ Future<String> bbcnews2(number) async {
     }
   }
   return '';
-}
+}*/
 
 // BBC NEWS FIXED
 
-Future<String> bbcNews() async {
+Future<List> bbcNews() async {
   var document = await fetchDocument("https://www.bbc.com/news/world");
 
   var articles = document.getElementsByTagName("h3");
   articles.removeAt(0); // first one is duplicated
   //print(articles_links);
-  var articleList;
+  var articleList = [];
   for (var i = 0; i < articles.length; i++) {
     var item = await bbcnews2Article(articles, i);
-    articleList.add(item);
+    if (item != '') {
+      articleList.add(item);
+    }
   }
   return articleList;
 }
 
 Future<String> bbcnews2Article(articles, number) async {
-  final linkEnd = articles[number].parent.attributes['href'];
-  final articleLink = "https://www.bbc.com" + linkEnd;
-  final document = await fetchDocument(articleLink);
-  final title = document.getElementsByTagName('h1');
-  final paragraphs = document.getElementsByTagName('p');
-  paragraphs.insert(0, title[0]);
+  String? linkEnd = articles[number].parent.attributes['href'];
+
   var information = '';
-  for (var i = 0; i <= 3; i++) {
-    information += paragraphs[i].text + ' ';
+  if (linkEnd != null && linkEnd.startsWith('/')) {
+    var articleLink = "https://www.bbc.com" + linkEnd;
+    final document = await fetchDocument(articleLink);
+    final title = document.getElementsByTagName('h1');
+    final paragraphs = document.getElementsByTagName('p');
+    paragraphs.insert(0, title[0]);
+    for (var i = 0; i <= 3; i++) {
+      information += paragraphs[i].text + ' ';
+    }
   }
   return information;
 }
@@ -96,18 +106,23 @@ Future<String> weather(city, current) async {
   cityResult = results[0].children[0].attributes['href'];
 
   if (cityResult == null) {
-    return ('No weather info about' + city);
+    return ('No weather info about ' + city);
   }
   //print(forecast_now_addr);
   // get current and daily weather link
   print(cityResult);
   document = await fetchDocument("https://www.accuweather.com" + cityResult);
-  print(document.getElementsByClassName(
-      "cur-con-weather-card card-module non-ad content-module lbar-panel"));
-  var weatherLink = document
-      .getElementsByClassName(
-          "cur-con-weather-card card-module non-ad content-module lbar-panel")[0]
-      .attributes["href"];
+  var weatherLink;
+  weatherLink = document.getElementsByClassName(
+      "cur-con-weather-card card-module non-ad content-module lbar-panel");
+  if (weatherLink.length == 0) {
+    weatherLink = document.getElementsByClassName(
+        "cur-con-weather-card card-module non-ad no-shadow lbar-panel");
+  }
+  if (weatherLink.length == 0) {
+    return ('Error finding weather info about ' + city);
+  }
+  weatherLink = weatherLink[0].attributes["href"];
 
   forecastNowAddr = "https://www.accuweather.com" + weatherLink!;
 
@@ -165,12 +180,12 @@ Future<String> getDayWeather(city) async {
 }
 
 // LOCAL NEWS TITLES
-Future<List<Element>> googleNews() async {
+Future<List> googleNews() async {
   var document = await fetchDocument(
       'https://news.google.com/topics/CAAqHAgKIhZDQklTQ2pvSWJHOWpZV3hmZGpJb0FBUAE?hl=en');
   var titles = document.getElementsByTagName('h3');
-  var titleList;
-  for (var i; i < titles.length; i++) {
+  var titleList = [];
+  for (var i = 0; i < 10; i++) {
     titleList.add(titles[i].text);
   }
   return titleList;
@@ -218,7 +233,7 @@ Future<String> wikipedia(String spacedQuery) async {
 
 void main() async {
   //var lol = await wikipedia('diego maradona');
-  getCurrentWeather('cadiz');
+  print(await getDayWeather('cadiz'));
   //var localNews = await googleNews();
   //print(getLocalNewsTitle(localNews, 0));
 }
