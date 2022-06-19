@@ -162,7 +162,7 @@ class _MyHomePageState extends State<MyHomePage> {
       if (_isPlaying) {
         flutterTts.speak(radioText);
         player.resume();
-        await flutterTts.awaitSpeakCompletion(true);
+        //await flutterTts.awaitSpeakCompletion(true); not working, crashes
       }
 
       count += 1;
@@ -181,30 +181,30 @@ class _MyHomePageState extends State<MyHomePage> {
     String information = 'There was an error';
     switch (item) {
       case 0:
-        player.setSourceAsset("audio/sound1.mp3");
+        player.setSourceAsset("audio/localforecast.mp3");
         information = news['currweather'];
         break;
       case 1:
-        player.setSourceAsset("audio/localforecast.mp3");
+        player.setSourceAsset("audio/smoothlovin.mp3");
         information = news['local'][localIndex];
         reduceLocal();
         break;
       case 2:
-        player.setSourceAsset("audio/sound1.mp3");
+        player.setSourceAsset("audio/springish.mp3");
         information = news['world'][worldIndex];
         reduceWorld();
         break;
       case 3:
-        player.setSourceAsset("audio/sound1.mp3");
+        player.setSourceAsset("audio/springish.mp3");
         information = news['dayweather'];
         break;
       case 4:
         if (news['topic'] != null) {
-          player.setSourceAsset("audio/sound1.mp3");
+          player.setSourceAsset("audio/springish.mp3");
           information = news['topic'];
         } else {
           // if no topic give more world news
-          player.setSourceAsset("audio/sound1.mp3");
+          player.setSourceAsset("audio/springish.mp3");
           information = news['world'][worldIndex];
           reduceWorld();
         }
@@ -220,6 +220,7 @@ class _MyHomePageState extends State<MyHomePage> {
       //int result = await player.pause();
       //if (result == 1) {
       disposeTimer();
+      player.stop();
       setState(() {
         _isPlaying = false;
       });
@@ -256,8 +257,7 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: <Widget>[
-            cityForm,
-            itemForm,
+            totalForm,
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               ElevatedButton(
                   onPressed: _togglePlaying,
