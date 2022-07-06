@@ -7,7 +7,10 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'palette.dart';
 import 'web.dart';
 import 'dart:io'; // later internet connection check
+import 'info.dart';
+import 'text_form.dart';
 
+const pages = [MyHomePage(title: 'Mechanical Radio'), InfoPage()];
 void main() {
   runApp(const MyApp());
 }
@@ -19,16 +22,21 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        title: 'Mechanical Radio',
-        theme: ThemeData(
-          primarySwatch: Palette.greenTone,
-        ),
-        home: const Center(
-          child: MyHomePage(title: 'Mechanical Radio'),
-        )
-        //page2,
-        //page3,
-        );
+      title: 'Mechanical Radio',
+      theme: ThemeData(
+        scaffoldBackgroundColor: const Color.fromARGB(255, 19, 19, 19),
+        textTheme: const TextTheme()
+            .apply(bodyColor: const Color.fromARGB(255, 131, 176, 186)),
+        primarySwatch: Palette.greenTone,
+      ),
+      initialRoute: '/home',
+      routes: {
+        // When navigating to the "/" route, build the FirstScreen widget.
+        '/home': (context) => const MyHomePage(title: 'Mechanical Radio'),
+        // When navigating to the "/second" route, build the SecondScreen widget.
+        '/info': (context) => const InfoPage(),
+      },
+    );
   }
 }
 
@@ -42,6 +50,12 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  Image mesh = Image.network(
+    'https://freevector-images.s3.amazonaws.com/uploads/vector/preview/40062/FreeVectorSpeakerGrillTexture.jpg',
+    height: 200,
+    width: 900,
+  );
+
   String radioText = '';
   var timer;
   var news;
@@ -50,8 +64,6 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _isPlaying = false;
   bool _audioPlayed = false;
   AudioPlayer player = AudioPlayer();
-  String audioasset = "assets/audio/sound1.mp3";
-  late Uint8List audiobytes;
   var topicText;
   var cityText;
   var itemForm;
@@ -77,7 +89,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  void createThings() {
+  void createForms() {
     final formKey = GlobalKey<FormState>();
     itemForm = MyTextFormField(
         hintText: 'Enter a topic...',
@@ -132,7 +144,7 @@ class _MyHomePageState extends State<MyHomePage> {
     //});
 
     super.initState();
-    createThings();
+    createForms();
     createNews();
     //timing
 
@@ -141,7 +153,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void createNews() async {
     news = await fetchAllNews();
-    newsLoaded = true;
+    print('fetched all news');
+    setState(() {
+      newsLoaded = true;
+    });
   }
 
   void disposeTimer() {
@@ -177,7 +192,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   //String getNews(item, index) {}
 
-  String webGet(item, {form, city = 'vienna'}) {
+  String webGet(item) {
     String information = 'There was an error';
     switch (item) {
       case 0:
@@ -185,12 +200,19 @@ class _MyHomePageState extends State<MyHomePage> {
         information = news['currweather'];
         break;
       case 1:
-        player.setSourceAsset("audio/smoothlovin.mp3");
-        information = news['local'][localIndex];
-        reduceLocal();
+        if (news['local'].isNotEmpty) {
+          player.setSourceAsset("audio/smoothlovin.mp3");
+          information = news['local'][localIndex];
+          reduceLocal();
+        } else {
+          player.setSourceAsset("audio/stay_the_course.mp3");
+          information = news['world'][worldIndex];
+          reduceWorld();
+        }
+
         break;
       case 2:
-        player.setSourceAsset("audio/springish.mp3");
+        player.setSourceAsset("audio/stay_the_course.mp3");
         information = news['world'][worldIndex];
         reduceWorld();
         break;
@@ -204,7 +226,7 @@ class _MyHomePageState extends State<MyHomePage> {
           information = news['topic'];
         } else {
           // if no topic give more world news
-          player.setSourceAsset("audio/springish.mp3");
+          player.setSourceAsset("audio/stay_the_course.mp3");
           information = news['world'][worldIndex];
           reduceWorld();
         }
@@ -245,21 +267,44 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  // Form
+  // Rendering
 
   @override
   Widget build(BuildContext context) {
+    /*if (!newsLoaded) {
+      return Scaffold(
+          appBar: AppBar(
+            title: Text(widget.title),
+          ),
+          body: Center(
+              child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              CircularProgressIndicator(),
+              Text("Loading"),
+            ],
+          )));
+    }*/
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
       ),
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            totalForm,
+            mesh,
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              totalForm,
               ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.black,
+                    onPrimary: Colors.white,
+                    shadowColor: Color.fromARGB(255, 61, 70, 65),
+                    elevation: 3,
+                    shape: CircleBorder(),
+                    minimumSize: Size(100, 40), //////// HERE
+                  ),
                   onPressed: _togglePlaying,
                   child: (_isPlaying
                       ? const Icon(Icons.pause)
@@ -272,162 +317,23 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.radio),
-          label: 'Radio',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.info),
-          label: 'Info',
-        ),
-      ]),
-    );
-  }
-}
-/*
-/*
-
-Custom Form Builder
-
-Passes text to the HomePageState
-
-*/
-
-class MyCustomForm extends StatefulWidget {
-  const MyCustomForm({Key? key}) : super(key: key);
-
-  String _controllerText;
-
-  String get controllerText => 'test';
-
-  set controllerText(String controllerText) {
-    _controllerText = controllerText;
-  }
-
-  @override
-  MyCustomFormState createState() {
-    return MyCustomFormState();
-  }
-}
-
-// Create a corresponding State class.
-// This class holds data related to the form.
-class MyCustomFormState extends State<MyCustomForm> {
-  // Create a global key that uniquely identifies the Form widget
-  // and allows validation of the form.
-  //
-  // Note: This is a GlobalKey<FormState>,
-  // not a GlobalKey<MyCustomFormState>.
-  final _formKey = GlobalKey<FormState>();
-  TextEditingController controller = TextEditingController();
-
-  @override
-  Widget build(BuildContext context) {
-    // Build a Form widget using the _formKey created above.
-    var form = Form(
-      key: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TextFormField(
-            controller: controller,
-            // The validator receives the text that the user has entered.
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter some text';
-              }
-              return null;
-            },
+      bottomNavigationBar: BottomNavigationBar(
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.radio),
+            label: 'Radio',
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16.0),
-            child: ElevatedButton(
-              onPressed: () {
-                // Validate returns true if the form is valid, or false otherwise.
-                if (_formKey.currentState!.validate()) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Processing Data')),
-                  );
-                }
-              },
-              child: const Text('Submit'),
-            ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.info),
+            label: 'Info',
           ),
         ],
-      ),
-    );
-    widget.controllerText(controller.text);
-    return form;
-  }
-}
-
-*/
-
-/* Full form */
-
-/* New Form */
-
-class MyTextFormField extends StatelessWidget {
-  final String hintText;
-  final void Function(String?)? onSaved;
-  final _keyForm = GlobalKey<FormState>();
-
-  MyTextFormField({
-    required this.hintText,
-    required this.onSaved,
-  });
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      key: key,
-      padding: EdgeInsets.all(8.0),
-      child: TextFormField(
-        decoration: InputDecoration(
-          hintText: hintText,
-          contentPadding: EdgeInsets.all(15.0),
-          border: InputBorder.none,
-          filled: true,
-          fillColor: Colors.grey[200],
-        ),
-        validator: (value) {
-          if (value == null || value.isEmpty) {
-            return 'Please enter some text';
+        onTap: (int index) {
+          if (index == 1) {
+            Navigator.pushNamed(context, '/info');
           }
-          return null;
         },
-        onSaved: onSaved,
       ),
     );
-  }
-}
-
-class MyRadio {
-  //package radio elements in object, TODO
-  String radioText = '';
-  var timer;
-  var news;
-  FlutterTts flutterTts = FlutterTts();
-
-  bool _isPlaying = false;
-  bool _audioPlayed = false;
-  AudioPlayer player = AudioPlayer();
-  String audioasset = "assets/audio/sound1.mp3";
-  late Uint8List audiobytes;
-  var topicText;
-  var cityText;
-  var itemForm;
-  var cityForm;
-  createThings() {
-    itemForm = MyTextFormField(
-        hintText: 'Enter a topic...',
-        onSaved: (String? value) {
-          topicText = value;
-        });
-    cityForm = MyTextFormField(
-        hintText: 'Enter a city',
-        onSaved: (String? value) {
-          cityText = value;
-        });
   }
 }

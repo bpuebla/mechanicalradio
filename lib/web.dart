@@ -31,30 +31,6 @@ Future<Document> fetchDocument(link) async {
   }
 }
 
-// BBC WORLD NEWS
-/*
-Future<String> bbcnews2(number) async {
-  var articlesLinks = [];
-
-  var document = await fetchDocument("https://www.bbc.com/news/world");
-
-  var articles = document.getElementsByClassName(
-      "gs-c-promo-heading gs-o-faux-block-link__overlay-link gel-pica-bold nw-o-link-split__anchor");
-  //print(articles_links);
-  for (var i = 0; i < articles.length; i++) {
-    articlesLinks.add(articles[i].attributes["href"]);
-    var articleLink = "https://www.bbc.com" + articlesLinks[number];
-    document = await fetchDocument(articleLink);
-    var title = document.getElementsByTagName('h1');
-    var paragraphs = document.getElementsByTagName('p');
-    paragraphs.insert(0, title[0]);
-    for (var i = 0; i <= number; i++) {
-      print(paragraphs[i].text);
-    }
-  }
-  return '';
-}*/
-
 // BBC NEWS FIXED
 
 Future<List> bbcNews() async {
@@ -97,7 +73,7 @@ Future<String> weather(city, current) async {
   String forecastTodayAddr;
 
   if (city == null) {
-    return 'No weather info about city';
+    return 'No weather info about $city';
   }
   var document = await fetchDocument(
       "https://www.accuweather.com/en/search-locations?query=" + city);
@@ -147,7 +123,7 @@ Future<String> weather(city, current) async {
     var currHumidity;
     var currWind;
 
-    return ("The current weather status is $currStatus, with a temperature of $currTemp degrees");
+    return ("The current weather status in $city is $currStatus, with a temperature of $currTemp degrees");
   } else {
     var dayStatus =
         document.getElementsByClassName("phrase")[1].text.toLowerCase();
@@ -165,7 +141,7 @@ Future<String> weather(city, current) async {
     var dayHumidity;
     var dayWind;
 
-    return ("The prediction for today's weather is $dayStatus, with a temperature of $dayTemp degrees");
+    return ("The prediction for today's weather in $city is $dayStatus, with a temperature of $dayTemp degrees");
   }
 }
 
@@ -185,7 +161,7 @@ Future<List> googleNews() async {
       'https://news.google.com/topics/CAAqHAgKIhZDQklTQ2pvSWJHOWpZV3hmZGpJb0FBUAE?hl=en');
   var titles = document.getElementsByTagName('h3');
   var titleList = [];
-  for (var i = 0; i < 10; i++) {
+  for (var i = 0; i < titles.length; i++) {
     titleList.add(titles[i].text);
   }
   return titleList;
@@ -206,7 +182,7 @@ Future<String> wikipedia(String spacedQuery) async {
   print(query);
   var document = await fetchDocument(
       'https://en.wikipedia.org/w/index.php?search=' + query);
-  final searchResults = document.getElementsByClassName('mw-search-results');
+  final searchResults = document.getElementsByClassName('searchresult');
   if (searchResults.isNotEmpty) {
     final link =
         searchResults[0].getElementsByTagName('href')[0].attributes['href'];
