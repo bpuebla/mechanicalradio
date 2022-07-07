@@ -45,9 +45,10 @@ class _InfoPageState extends State<InfoPage> {
               label: 'Info',
             ),
           ],
+          currentIndex: 1,
           onTap: (int index) {
             if (index == 0) {
-              Navigator.pushNamed(context, '/home');
+              Navigator.pushReplacementNamed(context, '/home');
             }
           }),
     );

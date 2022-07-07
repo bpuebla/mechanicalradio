@@ -230,7 +230,24 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    if (!newsLoaded) {
+      return Scaffold(
+          appBar: AppBar(
+            title: Text(widget.title),
+          ),
+          body: Center(
+              child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: const [
+                Padding(
+                    padding: EdgeInsets.all(12.0),
+                    child: CircularProgressIndicator()),
+                Text("Loading"),
+              ])));
+    }
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: Text(widget.title),
       ),
@@ -276,9 +293,10 @@ class _MyHomePageState extends State<MyHomePage> {
             label: 'Info',
           ),
         ],
+        currentIndex: 0,
         onTap: (int index) {
           if (index == 1) {
-            Navigator.pushNamed(context, '/info');
+            Navigator.pushReplacementNamed(context, '/info');
           }
         },
       ),

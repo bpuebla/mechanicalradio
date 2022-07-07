@@ -25,8 +25,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Mechanical Radio',
       theme: ThemeData(
-        scaffoldBackgroundColor: const Color.fromARGB(255, 19, 19, 19),
-        textTheme: const TextTheme().apply(
+        scaffoldBackgroundColor: Color.fromARGB(255, 24, 24, 24),
+        textTheme: Theme.of(context).textTheme.apply(
             bodyColor: const Color.fromARGB(255, 202, 218, 222),
             displayColor: const Color.fromARGB(255, 202, 218, 222)),
         primarySwatch: Palette.greenTone,
