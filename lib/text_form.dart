@@ -14,13 +14,13 @@ class MyTextFormField extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
         key: key,
-        padding: EdgeInsets.all(8.0),
+        padding: const EdgeInsets.all(4.0),
         child: SizedBox(
-            width: 300,
+            width: 200,
             child: TextFormField(
               decoration: InputDecoration(
                 hintText: hintText,
-                contentPadding: EdgeInsets.all(15.0),
+                contentPadding: const EdgeInsets.all(15.0),
                 border: InputBorder.none,
                 filled: true,
                 fillColor: Colors.grey[200],
