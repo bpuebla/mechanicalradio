@@ -1,6 +1,4 @@
 /* Info Page */
-import 'dart:async';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
 class InfoPage extends StatefulWidget {
@@ -24,10 +22,13 @@ class _InfoPageState extends State<InfoPage> {
               height: 400,
               width: 200,
               child: Text(
-                'Made by Bautista Puebla with tutoring of Horst Eidenberg for the TU Wien 2022SS course "Mobile App Prototyping". This application uses CC BY-NC licensing.',
-                style: Theme.of(context).textTheme.bodyMedium,
+                'Made by Bautista Puebla with tutoring of Horst Eidenberg for the TU Wien 2022SS course "Mobile App Prototyping".',
+                style: Theme.of(context).textTheme.headline5,
               ),
             ),
+            Row(children: [
+              IconButton(onPressed: openGit(), icon: FaIcon(FontAwesomeIcons.github-square))
+            ],)
           ],
         ),
       ),
