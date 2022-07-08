@@ -160,29 +160,28 @@ class _RadioState extends State<Radio> {
   var cityForm;
   var totalForm;
 
-  num localNewsIndex = 0;
-  num worldNewsIndex = 0;
-
   @override
   initState() {
     news = widget.newsFromHome;
     super.initState();
     createForms();
+    flutterTts.awaitSpeakCompletion(true);
+    flutterTts.speak('');
   }
 
   reduceLocal() {
-    localNewsIndex += 1;
-    if (localNewsIndex > news['local'].length - 1) {
+    localIndex += 1;
+    if (localIndex > news['local'].length - 1) {
       //reduce
-      localNewsIndex = localNewsIndex % news['local'].length;
+      localIndex = localIndex % news['local'].length;
     }
   }
 
   reduceWorld() {
-    worldNewsIndex += 1;
-    if (worldNewsIndex > news['world'].length - 1) {
+    worldIndex += 1;
+    if (worldIndex > news['world'].length - 1) {
       //reduce
-      worldNewsIndex = worldNewsIndex % news['world'].length;
+      worldIndex = worldIndex % news['world'].length;
     }
   }
 
@@ -274,35 +273,46 @@ class _RadioState extends State<Radio> {
   void disposeTimer() {
     if (timer != null) {
       timer.cancel();
+      flutterTts.stop();
+      player.pause();
     }
+  }
+
+  play(text) async {
+    final completer = Completer<void>();
+    await flutterTts.speak(text);
+    flutterTts.setCompletionHandler(() {
+      completer.complete();
+    });
+    return completer.future;
   }
 
   // webget
   void periodicInfo() async {
     radioText = webGet(0);
-    if (_isPlaying) {
-      flutterTts.speak(radioText);
-      player.resume();
-      //await flutterTts.awaitSpeakCompletion(true); not working, crashes
-    }
     int count = 0;
+    bool readingCompleted = true;
 
-    timer = Timer.periodic(const Duration(seconds: 15), (Timer t) async {
+    timer = Timer.periodic(const Duration(seconds: 5), (Timer t) async {
       //localIndex += 1;
-      print(radioText);
-      if (_isPlaying) {
-        flutterTts.speak(radioText);
-        player.resume();
-        //await flutterTts.awaitSpeakCompletion(true); not working, crashes
-      }
+      if (readingCompleted) {
+        print(radioText);
+        if (_isPlaying) {
+          readingCompleted = false;
+          player.resume();
+          await flutterTts.speak(radioText);
+          readingCompleted = true;
+          //not working, crashes
+        }
 
-      count += 1;
-      if (count > 4) {
-        //reduce
-        count = count % 5;
+        count += 1;
+        if (count > 4) {
+          //reduce
+          count = count % 5;
+        }
+        print(worldIndex);
+        radioText = webGet(count);
       }
-
-      radioText = webGet(count);
     });
   }
 
@@ -356,7 +366,6 @@ class _RadioState extends State<Radio> {
   void _togglePlaying() async {
     if (_isPlaying && _audioPlayed) {
       disposeTimer();
-      player.stop();
       setState(() {
         _isPlaying = false;
       });

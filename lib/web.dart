@@ -46,6 +46,7 @@ Future<List> bbcNews() async {
       articleList.add(item);
     }
   }
+  print(articleList);
   return articleList;
 }
 
@@ -53,7 +54,7 @@ Future<String> bbcnews2Article(articles, number) async {
   String? linkEnd = articles[number].parent.attributes['href'];
 
   var information = '';
-  if (linkEnd != null && linkEnd.startsWith('/')) {
+  if (linkEnd != null && linkEnd.startsWith('/news/world')) {
     var articleLink = "https://www.bbc.com" + linkEnd;
     final document = await fetchDocument(articleLink);
     final title = document.getElementsByTagName('h1');
