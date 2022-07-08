@@ -18,6 +18,7 @@ class MyTextFormField extends StatelessWidget {
         child: SizedBox(
             width: 200,
             child: TextFormField(
+              style: const TextStyle(color: Colors.black),
               decoration: InputDecoration(
                 hintText: hintText,
                 contentPadding: const EdgeInsets.all(15.0),

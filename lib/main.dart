@@ -1,14 +1,6 @@
-import 'dart:async';
-import 'dart:typed_data';
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 import 'palette.dart';
-import 'web.dart';
-import 'dart:io'; // later internet connection check
 import 'info.dart';
-import 'text_form.dart';
 import 'homepage.dart';
 
 const pages = [MyHomePage(title: 'Mechanical Radio'), InfoPage()];
@@ -35,7 +27,7 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/home',
       routes: {
-        // When navigating to the "/" route, build the FirstScreen widget.
+        // Named routes.
         '/home': (context) => pages[0],
       },
     );

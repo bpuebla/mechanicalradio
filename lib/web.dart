@@ -181,7 +181,7 @@ String getLocalNewsTitle(titles, index) {
 Future<String> wikipedia(String spacedQuery) async {
   var query = spacedQuery.replaceAll(' ', '%20');
   print(query);
-  var document = await fetchDocument(
+  Document document = await fetchDocument(
       'https://en.wikipedia.org/w/index.php?search=' + query);
   final searchResults = document.getElementsByClassName('searchresult');
   if (searchResults.isNotEmpty) {
@@ -194,9 +194,9 @@ Future<String> wikipedia(String spacedQuery) async {
     //print('none');
     return ('Information about ' + spacedQuery + ' is not available');
   }
+  print(document.body!.text);
 
-  var textParagraphs =
-      document.getElementsByClassName('mw-parser-output')[0].children;
+  var textParagraphs = document.getElementsByTagName('p');
   while (textParagraphs[0].localName != 'p' ||
       textParagraphs[0].className == 'mw-empty-elt') {
     textParagraphs.removeAt(0);
@@ -209,8 +209,8 @@ Future<String> wikipedia(String spacedQuery) async {
 }
 
 void main() async {
-  //var lol = await wikipedia('diego maradona');
-  print(await getDayWeather('cadiz'));
+  var lol = await wikipedia('gaara');
+  print(lol);
   //var localNews = await googleNews();
   //print(getLocalNewsTitle(localNews, 0));
 }
