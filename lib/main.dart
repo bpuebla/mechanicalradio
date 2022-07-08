@@ -25,18 +25,18 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Mechanical Radio',
       theme: ThemeData(
+        fontFamily: 'Roboto',
         scaffoldBackgroundColor: Color.fromARGB(255, 24, 24, 24),
         textTheme: Theme.of(context).textTheme.apply(
-            bodyColor: const Color.fromARGB(255, 202, 218, 222),
-            displayColor: const Color.fromARGB(255, 202, 218, 222)),
+              bodyColor: const Color.fromARGB(255, 202, 218, 222),
+              //displayColor: const Color.fromARGB(255, 202, 218, 222),
+            ),
         primarySwatch: Palette.greenTone,
       ),
       initialRoute: '/home',
       routes: {
         // When navigating to the "/" route, build the FirstScreen widget.
-        '/home': (context) => const MyHomePage(title: 'Mechanical Radio'),
-        // When navigating to the "/second" route, build the SecondScreen widget.
-        '/info': (context) => const InfoPage(),
+        '/home': (context) => pages[0],
       },
     );
   }

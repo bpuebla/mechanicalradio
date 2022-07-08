@@ -16,16 +16,13 @@ class _InfoPageState extends State<InfoPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: <Widget>[
             SizedBox(
-              height: 300,
-              width: 300,
+              height: 400,
+              width: 200,
               child: Text(
                 'Made by Bautista Puebla with tutoring of Horst Eidenberg for the TU Wien 2022SS course "Mobile App Prototyping". This application uses CC BY-NC licensing.',
                 style: Theme.of(context).textTheme.bodyMedium,
@@ -34,23 +31,6 @@ class _InfoPageState extends State<InfoPage> {
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.radio),
-              label: 'Radio',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.info),
-              label: 'Info',
-            ),
-          ],
-          currentIndex: 1,
-          onTap: (int index) {
-            if (index == 0) {
-              Navigator.pushReplacementNamed(context, '/home');
-            }
-          }),
     );
   }
 }

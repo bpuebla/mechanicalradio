@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:mechanicalradio/info.dart';
 import 'text_form.dart';
 import 'dart:async';
 import 'web.dart';
+import 'dart:io';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key, required this.title}) : super(key: key);
@@ -15,13 +17,138 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  var news;
+  var newsLoaded = false;
+  int _selectedIndex = 0;
+  bool _disconnected = false;
+
+  @override
+  void initState() {
+    // audioplay
+    //Future.delayed(Duration.zero, () async {
+    //  ByteData bytes =
+    //      await rootBundle.load(audioasset); //load audio from assets
+    //  audiobytes =
+    //      bytes.buffer.asUint8List(bytes.offsetInBytes, bytes.lengthInBytes);
+    //  setState(() {});
+    //});
+
+    super.initState();
+    createNews();
+    //timing
+
+    //periodicInfo();
+  }
+
+  void createNews() async {
+    bool connected = await checkConnection();
+    if (connected) {
+      news = await fetchAllNews();
+      print('fetched all news');
+      setState(() {
+        newsLoaded = true;
+      });
+    } else {
+      setState(() {
+        _disconnected = false;
+      });
+    }
+  }
+
+  Future<bool> checkConnection() async {
+    try {
+      final result = await InternetAddress.lookup('example.com');
+      if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
+        return true;
+      }
+    } on SocketException catch (_) {
+      return false;
+    }
+    return false;
+  }
+
+  // Rendering
+  Center loadingBody = Center(
+      child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: const [
+        Padding(
+            padding: EdgeInsets.all(12.0), child: CircularProgressIndicator()),
+        Text("Loading"),
+      ]));
+
+  @override
+  Widget build(BuildContext context) {
+    if (_disconnected) {
+      return Scaffold(
+          appBar: AppBar(
+            title: Text(widget.title),
+          ),
+          body: Center(
+              child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                Text("Could not connect to network.",
+                    style: Theme.of(context).textTheme.headline6),
+              ])));
+    }
+    if (!newsLoaded) {
+      return Scaffold(
+          appBar: AppBar(
+            title: Text(widget.title),
+          ),
+          body: loadingBody);
+    }
+    return Scaffold(
+      resizeToAvoidBottomInset: false,
+      appBar: AppBar(
+        title: Text(widget.title),
+      ),
+      body: IndexedStack(
+        children: [Radio(newsFromHome: news), const InfoPage()],
+        index: _selectedIndex,
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.radio),
+            label: 'Radio',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.info),
+            label: 'Info',
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        onTap: (int index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+      ),
+    );
+  }
+}
+
+class Radio extends StatefulWidget {
+  const Radio({Key? key, required this.newsFromHome}) : super(key: key);
+
+  final Map newsFromHome;
+
+  @override
+  State<Radio> createState() => _RadioState();
+}
+
+class _RadioState extends State<Radio> {
+  late Map news;
   Image mesh = Image.network(
     'https://st3.depositphotos.com/5970082/14924/i/600/depositphotos_149248824-stock-photo-black-metal-speaker-mesh.jpg',
   );
 
   String radioText = '';
   var timer;
-  var news;
   FlutterTts flutterTts = FlutterTts();
 
   bool _isPlaying = false;
@@ -35,6 +162,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
   num localNewsIndex = 0;
   num worldNewsIndex = 0;
+
+  @override
+  initState() {
+    news = widget.newsFromHome;
+    super.initState();
+    createForms();
+  }
 
   reduceLocal() {
     localNewsIndex += 1;
@@ -100,31 +234,41 @@ class _MyHomePageState extends State<MyHomePage> {
   num localIndex = 0;
   num worldIndex = 0;
   var newsLoaded = false;
+
   @override
-  void initState() {
-    // audioplay
-    //Future.delayed(Duration.zero, () async {
-    //  ByteData bytes =
-    //      await rootBundle.load(audioasset); //load audio from assets
-    //  audiobytes =
-    //      bytes.buffer.asUint8List(bytes.offsetInBytes, bytes.lengthInBytes);
-    //  setState(() {});
-    //});
-
-    super.initState();
-    createForms();
-    createNews();
-    //timing
-
-    //periodicInfo();
-  }
-
-  void createNews() async {
-    news = await fetchAllNews();
-    print('fetched all news');
-    setState(() {
-      newsLoaded = true;
-    });
+  Widget build(BuildContext context) {
+    return Scaffold(
+        body: Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: <Widget>[
+          Container(
+            padding: EdgeInsets.all(8.0),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(40),
+              child: mesh,
+            ),
+            width: 350,
+          ),
+          Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+            totalForm,
+            ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  primary: Colors.grey,
+                  onPrimary: Colors.black,
+                  shadowColor: Colors.white,
+                  elevation: 5,
+                  shape: const CircleBorder(),
+                  minimumSize: const Size(70, 70), //////// HERE
+                ),
+                onPressed: _togglePlaying,
+                child: (_isPlaying
+                    ? const Icon(Icons.pause, size: 40)
+                    : const Icon(Icons.play_arrow, size: 40))),
+          ]),
+        ],
+      ),
+    ));
   }
 
   void disposeTimer() {
@@ -136,7 +280,11 @@ class _MyHomePageState extends State<MyHomePage> {
   // webget
   void periodicInfo() async {
     radioText = webGet(0);
-
+    if (_isPlaying) {
+      flutterTts.speak(radioText);
+      player.resume();
+      //await flutterTts.awaitSpeakCompletion(true); not working, crashes
+    }
     int count = 0;
 
     timer = Timer.periodic(const Duration(seconds: 15), (Timer t) async {
@@ -224,82 +372,5 @@ class _MyHomePageState extends State<MyHomePage> {
         _isPlaying = true;
       });
     }
-  }
-
-  // Rendering
-
-  @override
-  Widget build(BuildContext context) {
-    if (!newsLoaded) {
-      return Scaffold(
-          appBar: AppBar(
-            title: Text(widget.title),
-          ),
-          body: Center(
-              child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: const [
-                Padding(
-                    padding: EdgeInsets.all(12.0),
-                    child: CircularProgressIndicator()),
-                Text("Loading"),
-              ])));
-    }
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: <Widget>[
-            Container(
-              padding: EdgeInsets.all(8.0),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(40),
-                child: mesh,
-              ),
-              width: 350,
-            ),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-              totalForm,
-              ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    primary: Colors.grey,
-                    onPrimary: Colors.black,
-                    shadowColor: Colors.white,
-                    elevation: 5,
-                    shape: const CircleBorder(),
-                    minimumSize: const Size(70, 70), //////// HERE
-                  ),
-                  onPressed: _togglePlaying,
-                  child: (_isPlaying
-                      ? const Icon(Icons.pause, size: 40)
-                      : const Icon(Icons.play_arrow, size: 40))),
-            ]),
-          ],
-        ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.radio),
-            label: 'Radio',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.info),
-            label: 'Info',
-          ),
-        ],
-        currentIndex: 0,
-        onTap: (int index) {
-          if (index == 1) {
-            Navigator.pushReplacementNamed(context, '/info');
-          }
-        },
-      ),
-    );
   }
 }

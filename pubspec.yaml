@@ -68,7 +68,12 @@ flutter:
   #   - images/a_dot_ham.jpeg
   assets:
       - assets/audio/
-  
+  fonts:
+      - family: Roboto
+        fonts:
+        - asset: fonts/Roboto-Regular.ttf
+        - asset: fonts/Roboto-Italic.ttf
+          style: italic
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
 
