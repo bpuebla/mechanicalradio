@@ -1,5 +1,7 @@
 /* Info Page */
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class InfoPage extends StatefulWidget {
   const InfoPage({Key? key}) : super(key: key);
@@ -16,22 +18,39 @@ class _InfoPageState extends State<InfoPage> {
     return Scaffold(
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             SizedBox(
-              height: 400,
+              height: 120,
               width: 200,
               child: Text(
-                'Made by Bautista Puebla with tutoring of Horst Eidenberg for the TU Wien 2022SS course "Mobile App Prototyping".',
-                style: Theme.of(context).textTheme.headline5,
+                'Made by Bautista Puebla with tutoring of Horst Eidenberger for the TU Wien 2022SS course "Mobile App Prototyping".',
+                style: Theme.of(context).textTheme.subtitle1,
               ),
             ),
-            Row(children: [
-              IconButton(onPressed: openGit(), icon: FaIcon(FontAwesomeIcons.github-square))
-            ],)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                    padding: EdgeInsets.all(10.0),
+                    onPressed: () => openGit(),
+                    icon: const FaIcon(
+                      FontAwesomeIcons.githubSquare,
+                      size: 34.0,
+                      color: Colors.blueGrey,
+                    ))
+              ],
+            )
           ],
         ),
       ),
     );
+  }
+
+  openGit() async {
+    final uri = Uri.parse("https://github.com/bpuebla/mechanicalradio");
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
   }
 }
