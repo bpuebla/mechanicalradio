@@ -29,4 +29,7 @@ http://creativecommons.org/licenses/by/4.0/
 Licensed under Creative Commons: By Attribution 4.0 License
 http://creativecommons.org/licenses/by/4.0/
 
+"Springish" Gillicuddy (https://freemusicarchive.org/music/gillicuddy/)
+Licensed under CC BY-NC 3.0 License
+https://creativecommons.org/licenses/by-nc/3.0/
 ## License

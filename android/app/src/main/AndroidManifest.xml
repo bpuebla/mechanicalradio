@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.mechanicalradio.radio">
+    package="com.example.mechanicalradio">
    <application
         android:label="Mechanical Radio"
         android:name="${applicationName}"
