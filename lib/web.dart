@@ -156,18 +156,16 @@ Future<String> getDayWeather(city) async {
   return dayWeather;
 }
 
-// LOCAL NEWS TITLES
+/// Retrieves local news titles
 Future<List> googleNews() async {
   var document = await fetchDocument(
       'https://news.google.com/topics/CAAqHAgKIhZDQklTQ2pvSWJHOWpZV3hmZGpJb0FBUAE?hl=en');
-  var titles = document.getElementsByTagName('h3');
+  var titles = document.getElementsByTagName('h3'); // get titles
   var titleList = [];
   for (var i = 0; i < titles.length; i++) {
     titleList.add(titles[i].text);
   }
   return titleList;
-
-  //get actual city news
 }
 
 String getLocalNewsTitle(titles, index) {
@@ -177,7 +175,7 @@ String getLocalNewsTitle(titles, index) {
   return titles[index].text;
 }
 
-// WIKIPEDIA INFO
+/// Parses the first paragraph of the first result for a query
 Future<String> wikipedia(String spacedQuery) async {
   var query = spacedQuery.replaceAll(' ', '%20');
   print(query);
@@ -207,6 +205,7 @@ Future<String> wikipedia(String spacedQuery) async {
   return (information);
 }
 
+///
 Future<List> wikipediaNews() async {
   var stringList = [];
   Document document = await fetchDocument(
@@ -222,6 +221,7 @@ Future<List> wikipediaNews() async {
 }
 
 void main() async {
+  // Testing only
   var lol = await fetchAllNews();
   print(lol['world']);
   //var localNews = await googleNews();

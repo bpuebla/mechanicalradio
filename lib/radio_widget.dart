@@ -5,6 +5,7 @@ import 'text_form.dart';
 import 'dart:async';
 import 'web.dart';
 
+/// Stateless widget that builds the body of the radio, provided the news.
 class RadioWidget extends StatefulWidget {
   const RadioWidget({Key? key, required this.newsFromHome}) : super(key: key);
 
@@ -20,34 +21,48 @@ class _RadioWidgetState extends State<RadioWidget> {
 
   /// Decoration image
   Image mesh = Image.network(
-    //'https://st3.depositphotos.com/5970082/14924/i/600/depositphotos_149248824-stock-photo-black-metal-speaker-mesh.jpg',
     'https://media.istockphoto.com/photos/metal-grille-over-speakers-picture-id182187519?k=20&m=182187519&s=612x612&w=0&h=BjMrjxZk8LdUyKHSNZ1G5bSVbs6lm8zXRKIgl_kcZeY=',
   );
 
-  String radioText = '';
-  var timer;
-  FlutterTts flutterTts = FlutterTts();
+  String radioText = ''; // Read by the TTS
+  late Timer timer; // Periodic timer for exec. of radio
+  FlutterTts flutterTts = FlutterTts(); // Text To Speech
 
-  bool _isPlaying = false;
-  bool _audioPlayed = false;
-  AudioPlayer player = AudioPlayer();
-  var topicText;
-  var cityText;
+  bool _isPlaying = false; // Indicates if radio is playing
+  bool _audioPlayed = false; // Used for pausing, deprecated.
+  AudioPlayer player = AudioPlayer(); // Player for background music
+  var topicText; // Stores text on topic form
+  var cityText; // Stores text from city form
+
+  // Storing forms, see createForms()
   var itemForm;
   var cityForm;
   var totalForm;
-  bool weatherPlayed = false;
+
+  bool topicPlayed = false;
+  bool weatherPlayed =
+      false; // Indicates if weather has been played in the last 5 minutes
+
+  // Indicates if weather or topic info is being updated
   bool _updatingCity = false;
   bool _updatingTopic = false;
 
+  // Indexes for news articles
+  num localIndex = 0;
+  num worldIndex = 0;
+  // Index for news option
+  int count = 0;
+
+  // Writes the news from the args to its variable, creates forms and initializes the text to speech.
   @override
   initState() {
     news = widget.newsFromHome;
     super.initState();
     createForms();
     flutterTts.setLanguage("en-US");
-    flutterTts.awaitSpeakCompletion(true);
-    flutterTts.speak('');
+    flutterTts
+        .awaitSpeakCompletion(true); // speak() returns once speech is completed
+    flutterTts.speak(''); // initializing
   }
 
   @override
@@ -98,6 +113,13 @@ class _RadioWidgetState extends State<RadioWidget> {
   Timer weatherTimer() =>
       Timer(const Duration(minutes: 5), () => {switchWeather()});
 
+  Timer topicTimer() =>
+      Timer(const Duration(minutes: 5), () => {switchTopic()});
+
+  void switchTopic() {
+    topicPlayed = false;
+  }
+
   void switchWeather() {
     weatherPlayed = false;
   }
@@ -141,12 +163,14 @@ class _RadioWidgetState extends State<RadioWidget> {
         ),
         onPressed: () {
           if (formKey.currentState!.validate()) {
+            // Validates nonEmpty and not null
             formKey.currentState!.save();
           }
         },
         child: const Text('Save All'));
 
     totalForm = Form(
+        // to be appended to body.
         key: formKey,
         child: Column(
           children: [itemForm, cityForm, button],
@@ -176,25 +200,12 @@ class _RadioWidgetState extends State<RadioWidget> {
   }
   //String cityFormText = cityForm.getCont;
 
-  num localIndex = 0;
-  num worldIndex = 0;
-  int count = 0;
-
   void disposeTimer() {
     if (timer != null) {
       timer.cancel();
       flutterTts.stop();
       player.pause();
     }
-  }
-
-  play(text) async {
-    final completer = Completer<void>();
-    await flutterTts.speak(text);
-    flutterTts.setCompletionHandler(() {
-      completer.complete();
-    });
-    return completer.future;
   }
 
   // webget
@@ -271,7 +282,7 @@ class _RadioWidgetState extends State<RadioWidget> {
 
         break;
       case 4:
-        if (news['topic'] != null) {
+        if (news['topic'] != null && !weatherPlayed) {
           player.setSourceAsset("audio/sincerely.mp3");
           information = news['topic'];
         } else {
