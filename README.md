@@ -12,6 +12,9 @@ The objective of the project is to develop a working radio that produces endless
 -	Transformation of text to a clip of speech
 -	Joining of both clips and presentation on the app
 
+
+
+=======
 ## Documentation
 ### App (main.dart)
 
@@ -107,3 +110,25 @@ Functions dedicated to parsing relevant data from some websites.
 ### Palette
 
 MaterialColor swatch for green/blue desaturated tones, from 0 to 100%.
+
+=============
+## Credits
+"Stay the Course" Kevin MacLeod (incompetech.com)
+Licensed under Creative Commons: By Attribution 4.0 License
+http://creativecommons.org/licenses/by/4.0/
+
+"Local Forecast - Slower" Kevin MacLeod (incompetech.com)
+Licensed under Creative Commons: By Attribution 4.0 License
+http://creativecommons.org/licenses/by/4.0/
+
+"Smooth Lovin" Kevin MacLeod (incompetech.com)
+Licensed under Creative Commons: By Attribution 4.0 License
+http://creativecommons.org/licenses/by/4.0/
+
+"Sincerely" Kevin MacLeod (incompetech.com)
+Licensed under Creative Commons: By Attribution 4.0 License
+http://creativecommons.org/licenses/by/4.0/
+
+"Springish" Gillicuddy (https://freemusicarchive.org/music/gillicuddy/)
+Licensed under CC BY-NC 3.0 License
+https://creativecommons.org/licenses/by-nc/3.0/
