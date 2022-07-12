@@ -15,7 +15,10 @@ class RadioWidget extends StatefulWidget {
 }
 
 class _RadioWidgetState extends State<RadioWidget> {
+  /// Map of the news read on the radio.
   late Map news;
+
+  /// Decoration image
   Image mesh = Image.network(
     //'https://st3.depositphotos.com/5970082/14924/i/600/depositphotos_149248824-stock-photo-black-metal-speaker-mesh.jpg',
     'https://media.istockphoto.com/photos/metal-grille-over-speakers-picture-id182187519?k=20&m=182187519&s=612x612&w=0&h=BjMrjxZk8LdUyKHSNZ1G5bSVbs6lm8zXRKIgl_kcZeY=',
@@ -33,12 +36,16 @@ class _RadioWidgetState extends State<RadioWidget> {
   var itemForm;
   var cityForm;
   var totalForm;
+  bool weatherPlayed = false;
+  bool _updatingCity = false;
+  bool _updatingTopic = false;
 
   @override
   initState() {
     news = widget.newsFromHome;
     super.initState();
     createForms();
+    flutterTts.setLanguage("en-US");
     flutterTts.awaitSpeakCompletion(true);
     flutterTts.speak('');
   }
@@ -48,11 +55,10 @@ class _RadioWidgetState extends State<RadioWidget> {
     return Scaffold(
         resizeToAvoidBottomInset: false,
         body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          child: ListView(
             children: <Widget>[
               Container(
-                padding: EdgeInsets.all(8.0),
+                padding: EdgeInsets.symmetric(vertical: 40.0, horizontal: 12.0),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(40),
                   child: mesh,
@@ -61,23 +67,39 @@ class _RadioWidgetState extends State<RadioWidget> {
               ),
               Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
                 totalForm,
-                ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      primary: Colors.grey,
-                      onPrimary: Colors.black,
-                      shadowColor: Colors.white,
-                      elevation: 5,
-                      shape: const CircleBorder(),
-                      minimumSize: const Size(70, 70), //////// HERE
-                    ),
-                    onPressed: _togglePlaying,
-                    child: (_isPlaying
-                        ? const Icon(Icons.pause, size: 40)
-                        : const Icon(Icons.play_arrow, size: 40))),
+                buttonChild(context),
               ]),
             ],
           ),
         ));
+  }
+
+  Widget buttonChild(context) {
+    if (_updatingCity || _updatingTopic) {
+      return CircularProgressIndicator();
+    } else {
+      return ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            side: BorderSide(),
+            primary: Colors.grey,
+            onPrimary: Colors.black,
+            shadowColor: Colors.white,
+            elevation: 5,
+            shape: const CircleBorder(),
+            minimumSize: const Size(70, 70), //////// HERE
+          ),
+          onPressed: _togglePlaying,
+          child: (_isPlaying
+              ? const Icon(Icons.pause, size: 40)
+              : const Icon(Icons.play_arrow, size: 40)));
+    }
+  }
+
+  Timer weatherTimer() =>
+      Timer(const Duration(minutes: 5), () => {switchWeather()});
+
+  void switchWeather() {
+    weatherPlayed = false;
   }
 
   reduceLocal() {
@@ -132,17 +154,31 @@ class _RadioWidgetState extends State<RadioWidget> {
   }
 
   void updateTopic(query) async {
+    setState(() {
+      _updatingTopic = true;
+    });
+
     news['topic'] = await wikipedia(query);
+    setState(() {
+      _updatingTopic = false;
+    });
   }
 
   void updateCity(query) async {
+    setState(() {
+      _updatingCity = true;
+    });
     news['currweather'] = await getCurrentWeather(query);
     news['dayweather'] = await getDayWeather(query);
+    setState(() {
+      _updatingCity = false;
+    });
   }
   //String cityFormText = cityForm.getCont;
 
   num localIndex = 0;
   num worldIndex = 0;
+  int count = 0;
 
   void disposeTimer() {
     if (timer != null) {
@@ -163,8 +199,7 @@ class _RadioWidgetState extends State<RadioWidget> {
 
   // webget
   void periodicInfo() async {
-    radioText = webGet(0);
-    int count = 0;
+    radioText = webGet(count);
     bool readingCompleted = true;
 
     timer = Timer.periodic(const Duration(seconds: 10), (Timer t) async {
@@ -189,15 +224,22 @@ class _RadioWidgetState extends State<RadioWidget> {
     });
   }
 
-  //String getNews(item, index) {}
-
   String webGet(item) {
     String information = 'There was an error';
     switch (item) {
       case 0:
-        player.setSourceAsset("audio/localforecast.mp3");
-        information = news['currweather'];
+        if (weatherPlayed) {
+          player.setSourceAsset("audio/stay_the_course.mp3");
+          information = news['world'][worldIndex];
+          reduceWorld();
+        } else {
+          player.setSourceAsset("audio/localforecast.mp3");
+          information = news['currweather'];
+          weatherPlayed = true;
+          weatherTimer();
+        }
         break;
+
       case 1:
         if (news['local'].isNotEmpty) {
           player.setSourceAsset("audio/smoothlovin.mp3");
@@ -216,8 +258,17 @@ class _RadioWidgetState extends State<RadioWidget> {
         reduceWorld();
         break;
       case 3:
-        player.setSourceAsset("audio/springish.mp3");
-        information = news['dayweather'];
+        if (weatherPlayed) {
+          player.setSourceAsset("audio/stay_the_course.mp3");
+          information = news['world'][worldIndex];
+          reduceWorld();
+        } else {
+          player.setSourceAsset("audio/springish.mp3");
+          information = news['dayweather'];
+          weatherPlayed = true;
+          weatherTimer();
+        }
+
         break;
       case 4:
         if (news['topic'] != null) {

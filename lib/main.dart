@@ -5,17 +5,19 @@ import 'homepage.dart';
 
 const pages = [MyHomePage(title: 'Mechanical Radio'), InfoPage()];
 void main() {
-  runApp(const MyApp());
+  runApp(const App());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+/// Builds the Mechanical Radio App as a Material App.
+class App extends StatelessWidget {
+  const App({Key? key}) : super(key: key);
 
   // Root
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Mechanical Radio',
+      /* Uses Roboto Regular font, with black background and white text */
       theme: ThemeData(
         fontFamily: 'Roboto',
         scaffoldBackgroundColor: Color.fromARGB(255, 24, 24, 24),
@@ -27,7 +29,7 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/home',
       routes: {
-        // Named routes.
+        // Named routes. Not used in the end (see IndexedStack).
         '/home': (context) => pages[0],
       },
     );

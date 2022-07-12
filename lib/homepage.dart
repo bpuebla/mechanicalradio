@@ -15,43 +15,11 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  var news;
-  var newsLoaded = false;
+  /// Map of the news read on the radio.
+  late Map news;
+  bool newsLoaded = false;
   int _selectedIndex = 0;
   bool _disconnected = false;
-
-  @override
-  void initState() {
-    super.initState();
-    createNews();
-  }
-
-  void createNews() async {
-    bool connected = await checkConnection();
-    if (connected) {
-      news = await fetchAllNews();
-      print('fetched all news');
-      setState(() {
-        newsLoaded = true;
-      });
-    } else {
-      setState(() {
-        _disconnected = false;
-      });
-    }
-  }
-
-  Future<bool> checkConnection() async {
-    try {
-      final result = await InternetAddress.lookup('example.com');
-      if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
-        return true;
-      }
-    } on SocketException catch (_) {
-      return false;
-    }
-    return false;
-  }
 
   // Rendering
   Center loadingBody = Center(
@@ -87,33 +55,74 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           body: loadingBody);
     }
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: IndexedStack(
-        children: [RadioWidget(newsFromHome: news), const InfoPage()],
-        index: _selectedIndex,
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.radio),
-            label: 'Radio',
+    return WillPopScope(
+        onWillPop: _onWillPop,
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text(widget.title),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.info),
-            label: 'Info',
+          body: IndexedStack(
+            children: [RadioWidget(newsFromHome: news), const InfoPage()],
+            index: _selectedIndex,
           ),
-        ],
-        currentIndex: _selectedIndex,
-        onTap: (int index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-      ),
-    );
+          bottomNavigationBar: BottomNavigationBar(
+            items: const [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.radio),
+                label: 'Radio',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.info),
+                label: 'Info',
+              ),
+            ],
+            currentIndex: _selectedIndex,
+            onTap: (int index) {
+              setState(() {
+                _selectedIndex = index;
+              });
+            },
+          ),
+        ));
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    createNews();
+  }
+
+  void createNews() async {
+    bool connected = await checkConnection();
+    if (connected) {
+      news = await fetchAllNews();
+      print('fetched all news');
+      setState(() {
+        newsLoaded = true;
+      });
+    } else {
+      setState(() {
+        _disconnected = false;
+      });
+    }
+  }
+
+  Future<bool> checkConnection() async {
+    try {
+      final result = await InternetAddress.lookup('example.com');
+      if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
+        return true;
+      }
+    } on SocketException catch (_) {
+      return false;
+    }
+    return false;
+  }
+
+  Future<bool> _onWillPop() async {
+    setState(() {
+      _selectedIndex = 0;
+    });
+    return false;
   }
 }

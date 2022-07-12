@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 class MyTextFormField extends StatelessWidget {
   final String hintText;
   final void Function(String?)? onSaved;
-  final _keyForm = GlobalKey<FormState>();
 
   MyTextFormField({
     Key? key,
