@@ -295,7 +295,7 @@ class _RadioWidgetState extends State<RadioWidget> {
 
         break;
       case 4: // Normally topic info
-        if (news['topic'] != null && !weatherPlayed) {
+        if (news['topic'] != null && !topicPlayed) {
           player.setSourceAsset("audio/sincerely.mp3");
           information = news['topic'];
           topicPlayed = true;

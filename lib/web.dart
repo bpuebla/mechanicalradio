@@ -200,7 +200,6 @@ Future<String> wikipedia(String spacedQuery) async {
     // no results
     return ('Information about ' + spacedQuery + ' is not available');
   }
-  print(document.body!.text);
 
   var textParagraphs = document.getElementsByTagName('p'); // find paragraphs
   while (textParagraphs[0].localName != 'p' ||
@@ -208,9 +207,10 @@ Future<String> wikipedia(String spacedQuery) async {
     // if non important info
     textParagraphs.removeAt(0); // remove
   }
-  var information = textParagraphs[0].text.replaceAllMapped(
+  var information = textParagraphs[0].text + ' ' + textParagraphs[1].text;
+  information = information.replaceAllMapped(
       RegExp(r'\[.*?\]'), (match) => ''); //remove [1] references from the text
-  //print(information);
+  print(information);
   return (information);
 }
 
