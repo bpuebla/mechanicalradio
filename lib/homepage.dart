@@ -132,9 +132,14 @@ class _MyHomePageState extends State<MyHomePage> {
 
   /// Avoids quitting when back button is pressed.
   Future<bool> _onWillPop() async {
-    setState(() {
-      _selectedIndex = 0; // switches page to radio
-    });
-    return false;
+    if (_selectedIndex != 0) {
+      setState(() {
+        _selectedIndex = 0; // switches page to radio
+      });
+      return false;
+    } else {
+      // quit if on homepage
+      return true;
+    }
   }
 }

@@ -23,11 +23,14 @@ class _InfoPageState extends State<InfoPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             SizedBox(
-              height: 120,
-              width: 200,
+              height: 240,
+              width: 240,
               child: Text(
                 // info
-                'Made by Bautista Puebla with tutoring of Horst Eidenberger for the TU Wien 2022SS course "Mobile App Prototyping".',
+                '''Mechanical Radio is your friendly automatic radio, giving you info on weather, local news, world news and topic.
+Just write your city and desired topic on the form, press Submit, and hit the play button.
+
+Made by Bautista Puebla with tutoring of Horst Eidenberger for the TU Wien 2022SS course "Mobile App Prototyping".''',
                 style: Theme.of(context).textTheme.subtitle1,
               ),
             ),

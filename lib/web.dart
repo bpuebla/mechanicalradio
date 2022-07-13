@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:html/dom.dart';
 import 'package:http/http.dart' as http;
 import 'package:html/parser.dart';
@@ -44,7 +46,9 @@ Future<Document> fetchDocument(link) async {
 /// Information is retrieved from bbc.com/news/world
 Future<List> bbcNews() async {
   var document = await fetchDocument("https://www.bbc.com/news/world");
-
+  if (document.getElementsByClassName('no-mpu').isNotEmpty) {
+    document.getElementsByClassName('no-mpu')[0].remove();
+  }
   var articles = document.getElementsByTagName("h3"); // Search for h3
   articles.removeAt(0); // first one is duplicated
   var articleList = [];
@@ -54,7 +58,6 @@ Future<List> bbcNews() async {
       articleList.add(item);
     }
   }
-  print(articleList);
   return articleList;
 }
 
@@ -63,14 +66,17 @@ Future<String> bbcNewsArticle(articles, number) async {
   String? linkEnd = articles[number].parent.attributes['href'];
 
   var information = '';
-  if (linkEnd != null && linkEnd.startsWith('/news/world')) {
+  if (linkEnd != null &&
+      linkEnd.startsWith('/news/') &&
+      !linkEnd.startsWith('/news/live')) {
+    print(linkEnd);
     // only if its a world news article, not live event
     var articleLink = "https://www.bbc.com" + linkEnd;
     final document = await fetchDocument(articleLink);
     final title = document.getElementsByTagName('h1'); // title
     final paragraphs = document.getElementsByTagName('p'); // parahraphs
     paragraphs.insert(0, title[0]);
-    for (var i = 0; i <= 3; i++) {
+    for (var i = 0; i <= min(paragraphs.length - 1, 4); i++) {
       // first 4 paragraphs
       information += paragraphs[i].text + ' ';
     }
@@ -231,8 +237,9 @@ Future<List> wikipediaNews() async {
 
 void main() async {
   // Testing only
-  var lol = await fetchAllNews();
-  print(lol['world']);
-  //var localNews = await googleNews();
+  //var lol = await fetchAllNews();
+  //print(lol['world']);
+  var localNews = await bbcNews();
+  print(localNews);
   //print(getLocalNewsTitle(localNews, 0));
 }

@@ -171,7 +171,7 @@ class _RadioWidgetState extends State<RadioWidget> {
             formKey.currentState!.save();
           }
         },
-        child: const Text('Save All'));
+        child: const Text('Submit'));
 
     totalForm = Form(
         // to be appended to body.
