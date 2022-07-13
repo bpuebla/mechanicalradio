@@ -14,7 +14,7 @@ The objective of the project is to develop a working radio that produces endless
 
 
 
-=======
+---
 ## Documentation
 ### App (main.dart)
 
@@ -87,7 +87,7 @@ Stateless Widget used for creating custom TextFormField. Must be provided with a
 
 
 ### InfoPage
-Stateless widget that builds the body of the information display.
+Stateful widget that builds the body of the information display.
 ##### Methods
 - build(context) : Display information text about creators and Github repository button
 - openGit(context) : Opens URL of repository internally (originally wanted to be an external browser but did not know how)
@@ -111,7 +111,7 @@ Functions dedicated to parsing relevant data from some websites.
 
 MaterialColor swatch for green/blue desaturated tones, from 0 to 100%.
 
-=============
+---
 ## Credits
 "Stay the Course" Kevin MacLeod (incompetech.com)
 Licensed under Creative Commons: By Attribution 4.0 License
