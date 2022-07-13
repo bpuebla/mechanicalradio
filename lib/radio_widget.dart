@@ -89,6 +89,7 @@ class _RadioWidgetState extends State<RadioWidget> {
         ));
   }
 
+  /// Builds the Button Widget with its styling, or the Progress Indicator if it is updating.
   Widget buttonChild(context) {
     if (_updatingCity || _updatingTopic) {
       return CircularProgressIndicator();
@@ -101,7 +102,7 @@ class _RadioWidgetState extends State<RadioWidget> {
             shadowColor: Colors.white,
             elevation: 5,
             shape: const CircleBorder(),
-            minimumSize: const Size(70, 70), //////// HERE
+            minimumSize: const Size(70, 70),
           ),
           onPressed: _togglePlaying,
           child: (_isPlaying
@@ -110,13 +111,14 @@ class _RadioWidgetState extends State<RadioWidget> {
     }
   }
 
-  Timer weatherTimer() =>
+  Timer weatherTimer() => //  Creates a weather 5 minute timer
       Timer(const Duration(minutes: 5), () => {switchWeather()});
 
-  Timer topicTimer() =>
+  Timer topicTimer() => // same but for topic
       Timer(const Duration(minutes: 5), () => {switchTopic()});
 
   void switchTopic() {
+    // Callback for weatherTimer, makes weather readable again
     topicPlayed = false;
   }
 
@@ -125,6 +127,7 @@ class _RadioWidgetState extends State<RadioWidget> {
   }
 
   reduceLocal() {
+    // Adds to localIndex and reduces to 0 if the value is over its length.
     localIndex += 1;
     if (localIndex > news['local'].length - 1) {
       //reduce
@@ -140,6 +143,7 @@ class _RadioWidgetState extends State<RadioWidget> {
     }
   }
 
+  /// Creates the topic and weather forms, along with a Save button that store their data in its corresponding variables.
   void createForms() {
     final formKey = GlobalKey<FormState>();
     itemForm = MyTextFormField(
@@ -182,13 +186,14 @@ class _RadioWidgetState extends State<RadioWidget> {
       _updatingTopic = true;
     });
 
-    news['topic'] = await wikipedia(query);
+    news['topic'] = await wikipedia(query); // Retrieves wikipedia topic info
     setState(() {
       _updatingTopic = false;
     });
   }
 
   void updateCity(query) async {
+    // Retrieves all weather info
     setState(() {
       _updatingCity = true;
     });
@@ -200,6 +205,7 @@ class _RadioWidgetState extends State<RadioWidget> {
   }
   //String cityFormText = cityForm.getCont;
 
+  /// Cancels Timer and its callback, and pauses audio player.
   void disposeTimer() {
     if (timer != null) {
       timer.cancel();
@@ -208,7 +214,8 @@ class _RadioWidgetState extends State<RadioWidget> {
     }
   }
 
-  // webget
+  /// Creates the Timer that periodically reads the next news only if the previous news reading has been finished.
+  /// Runs TTS on what is returned by webGet(), and runs the player.
   void periodicInfo() async {
     radioText = webGet(count);
     bool readingCompleted = true;
@@ -216,13 +223,14 @@ class _RadioWidgetState extends State<RadioWidget> {
     timer = Timer.periodic(const Duration(seconds: 10), (Timer t) async {
       //localIndex += 1;
       if (readingCompleted) {
+        // Wait until reading is complete
         print(radioText);
         if (_isPlaying) {
           readingCompleted = false;
-          player.resume();
-          await flutterTts.speak(radioText);
+          player.resume(); // Play selected audio file
+          await flutterTts
+              .speak(radioText); // Speak text and return when finished
           readingCompleted = true;
-          //not working, crashes
         }
 
         count += 1;
@@ -230,29 +238,34 @@ class _RadioWidgetState extends State<RadioWidget> {
           //reduce
           count = count % 5;
         }
-        radioText = webGet(count);
+        radioText = webGet(count); // get next news
       }
     });
   }
 
+  /// Returns the corresponding string for information for the current count (which can only be five cases):
+  /// Local news, World news, topic news, current weather or day weather. Checks constraints for each.
   String webGet(item) {
-    String information = 'There was an error';
+    String information = 'There was an error'; // Default error message
     switch (item) {
-      case 0:
+      case 0: // Normaly current weather
         if (weatherPlayed) {
-          player.setSourceAsset("audio/stay_the_course.mp3");
-          information = news['world'][worldIndex];
-          reduceWorld();
+          // Weather every 5 min
+          player.setSourceAsset(
+              "audio/stay_the_course.mp3"); // Sets audio file used
+          information = news['world'][worldIndex]; // Retrieve news
+          reduceWorld(); // Fix index
         } else {
           player.setSourceAsset("audio/localforecast.mp3");
           information = news['currweather'];
           weatherPlayed = true;
-          weatherTimer();
+          weatherTimer(); // Starts timer if read
         }
         break;
 
-      case 1:
+      case 1: // Normaly local news
         if (news['local'].isNotEmpty) {
+          // In some locations, local news are not available
           player.setSourceAsset("audio/smoothlovin.mp3");
           information = news['local'][localIndex];
           reduceLocal();
@@ -263,12 +276,12 @@ class _RadioWidgetState extends State<RadioWidget> {
         }
 
         break;
-      case 2:
+      case 2: // World news
         player.setSourceAsset("audio/stay_the_course.mp3");
         information = news['world'][worldIndex];
         reduceWorld();
         break;
-      case 3:
+      case 3: // Normally day weather
         if (weatherPlayed) {
           player.setSourceAsset("audio/stay_the_course.mp3");
           information = news['world'][worldIndex];
@@ -281,10 +294,12 @@ class _RadioWidgetState extends State<RadioWidget> {
         }
 
         break;
-      case 4:
+      case 4: // Normally topic info
         if (news['topic'] != null && !weatherPlayed) {
           player.setSourceAsset("audio/sincerely.mp3");
           information = news['topic'];
+          topicPlayed = true;
+          topicTimer();
         } else {
           // if no topic give more world news
           player.setSourceAsset("audio/stay_the_course.mp3");
@@ -300,12 +315,13 @@ class _RadioWidgetState extends State<RadioWidget> {
   // player
   void _togglePlaying() async {
     if (_isPlaying && _audioPlayed) {
-      disposeTimer();
+      disposeTimer(); // Stops all players
       setState(() {
+        // Switch button icon
         _isPlaying = false;
       });
     } else if (!_isPlaying && !_audioPlayed) {
-      periodicInfo();
+      periodicInfo(); // Start all players
       setState(() {
         _isPlaying = true;
         _audioPlayed = true;

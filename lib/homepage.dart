@@ -17,9 +17,10 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   /// Map of the news read on the radio.
   late Map news;
-  bool newsLoaded = false;
-  int _selectedIndex = 0;
-  bool _disconnected = false;
+  bool newsLoaded = false; // whether news have finished loading.
+  int _selectedIndex = 0; // selected tab on the navigation bar.
+  bool _disconnected =
+      false; // Indicates whether there is internet connection or not.
 
   // Rendering
   Center loadingBody = Center(
@@ -35,6 +36,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     if (_disconnected) {
+      // Disconnected page
       return Scaffold(
           appBar: AppBar(
             title: Text(widget.title),
@@ -49,6 +51,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ])));
     }
     if (!newsLoaded) {
+      // Loading page
       return Scaffold(
           appBar: AppBar(
             title: Text(widget.title),
@@ -56,13 +59,18 @@ class _MyHomePageState extends State<MyHomePage> {
           body: loadingBody);
     }
     return WillPopScope(
+        // callback when back button is pressed
         onWillPop: _onWillPop,
         child: Scaffold(
           appBar: AppBar(
             title: Text(widget.title),
           ),
           body: IndexedStack(
-            children: [RadioWidget(newsFromHome: news), const InfoPage()],
+            // better than routes for bottomnavigationbar
+            children: [
+              RadioWidget(newsFromHome: news),
+              const InfoPage()
+            ], // Pages
             index: _selectedIndex,
           ),
           bottomNavigationBar: BottomNavigationBar(
@@ -79,6 +87,7 @@ class _MyHomePageState extends State<MyHomePage> {
             currentIndex: _selectedIndex,
             onTap: (int index) {
               setState(() {
+                // Used to switch pages
                 _selectedIndex = index;
               });
             },
@@ -89,16 +98,17 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    createNews();
+    createNews(); // Fetches news using scraping functions
   }
 
+  /// Runs checkConnection and gets news if true.
   void createNews() async {
     bool connected = await checkConnection();
     if (connected) {
       news = await fetchAllNews();
       print('fetched all news');
       setState(() {
-        newsLoaded = true;
+        newsLoaded = true; // Switches loading screen
       });
     } else {
       setState(() {
@@ -107,11 +117,12 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  /// Tests a site lookup to confirm internet connection
   Future<bool> checkConnection() async {
     try {
       final result = await InternetAddress.lookup('example.com');
       if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
-        return true;
+        return true; // true if connection
       }
     } on SocketException catch (_) {
       return false;
@@ -119,9 +130,10 @@ class _MyHomePageState extends State<MyHomePage> {
     return false;
   }
 
+  /// Avoids quitting when back button is pressed.
   Future<bool> _onWillPop() async {
     setState(() {
-      _selectedIndex = 0;
+      _selectedIndex = 0; // switches page to radio
     });
     return false;
   }

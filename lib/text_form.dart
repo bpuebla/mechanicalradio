@@ -26,12 +26,13 @@ class MyTextFormField extends StatelessWidget {
                 fillColor: Colors.grey[200],
               ),
               validator: (value) {
+                // only if non empty
                 if (value == null || value.isEmpty) {
                   return 'Please enter some text';
                 }
                 return null;
               },
-              onSaved: onSaved,
+              onSaved: onSaved, // custom save function
             )));
   }
 }

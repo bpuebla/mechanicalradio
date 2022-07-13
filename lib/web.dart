@@ -30,6 +30,7 @@ Future<Map> fetchAllNews({query, city = 'vienna'}) async {
 Future<Document> fetchDocument(link) async {
   var response = await http.Client().get(Uri.parse(link));
   if (response.statusCode == 200) {
+    // OK
     var document = await parse(response.body);
     return document;
   } else {
@@ -63,12 +64,14 @@ Future<String> bbcNewsArticle(articles, number) async {
 
   var information = '';
   if (linkEnd != null && linkEnd.startsWith('/news/world')) {
+    // only if its a world news article, not live event
     var articleLink = "https://www.bbc.com" + linkEnd;
     final document = await fetchDocument(articleLink);
-    final title = document.getElementsByTagName('h1');
-    final paragraphs = document.getElementsByTagName('p');
+    final title = document.getElementsByTagName('h1'); // title
+    final paragraphs = document.getElementsByTagName('p'); // parahraphs
     paragraphs.insert(0, title[0]);
     for (var i = 0; i <= 3; i++) {
+      // first 4 paragraphs
       information += paragraphs[i].text + ' ';
     }
   }
@@ -82,12 +85,11 @@ Future<String> bbcNewsArticle(articles, number) async {
 ///Information is retrieved from accuweather.com
 
 Future<String> weather(city, current) async {
-  String? cityResult;
-  String forecastNowAddr;
-  String forecastTodayAddr;
+  String? cityResult; // search result
+  String forecastNowAddr; // address for forecastNow
 
   if (city == null) {
-    return 'No weather info about $city';
+    return 'No weather info about city';
   }
   var document = await fetchDocument(
       "https://www.accuweather.com/en/search-locations?query=" +
@@ -98,43 +100,53 @@ Future<String> weather(city, current) async {
       results[0].children[0].attributes['href']; // gets link of first result
 
   if (cityResult == null) {
+    // If city not found, throw error
     return ('No weather info about ' + city);
   }
-  document = await fetchDocument("https://www.accuweather.com" + cityResult);
+
+  document = await fetchDocument(
+      "https://www.accuweather.com" + cityResult); // fetch city weather city
   var weatherLink;
   weatherLink = document.getElementsByClassName(
       "cur-con-weather-card card-module non-ad content-module lbar-panel");
   if (weatherLink.length == 0) {
     weatherLink = document.getElementsByClassName(
-        "cur-con-weather-card card-module non-ad no-shadow lbar-panel");
+        "cur-con-weather-card card-module non-ad no-shadow lbar-panel"); // get possible weather info elements
   }
   if (weatherLink.length == 0) {
     return ('Error finding weather info about ' + city);
   }
   weatherLink = weatherLink[0].attributes["href"];
 
-  forecastNowAddr = "https://www.accuweather.com" + weatherLink!;
+  forecastNowAddr =
+      "https://www.accuweather.com" + weatherLink!; // open current info link
 
-  forecastTodayAddr = "https://www.accuweather.com" +
-      weatherLink.replaceAll("current-weather", "daily-weather-forecast") +
-      "?day=1";
   print(forecastNowAddr);
-  print(forecastTodayAddr);
 
   document = await fetchDocument(forecastNowAddr);
   if (current == true) {
-    var currStatus =
-        document.getElementsByClassName("phrase")[0].text.trim().toLowerCase();
-    var currTemp =
-        document.getElementsByClassName("temp")[0].text.trim().toLowerCase();
+    // current weather
+    var currStatus = document
+        .getElementsByClassName("phrase")[0]
+        .text
+        .trim()
+        .toLowerCase(); // get status and clean
+    var currTemp = document
+        .getElementsByClassName("temp")[0]
+        .text
+        .trim()
+        .toLowerCase(); // get temperature and clean
     currTemp = currTemp.substring(0, 2);
 
     return ("The current weather status in $city is $currStatus, with a temperature of $currTemp degrees");
   } else {
-    var dayStatus =
-        document.getElementsByClassName("phrase")[1].text.toLowerCase();
+    // day weather
+    var dayStatus = document
+        .getElementsByClassName("phrase")[1]
+        .text
+        .toLowerCase(); // get status and clean
     var dayTemp = document
-        .getElementsByClassName("temperature")[0]
+        .getElementsByClassName("temperature")[0] // get temps and clean
         .text
         .trim()
         .toLowerCase();
@@ -156,66 +168,63 @@ Future<String> getDayWeather(city) async {
   return dayWeather;
 }
 
-/// Retrieves local news titles
+/// Retrieves local news elements
 Future<List> googleNews() async {
   var document = await fetchDocument(
-      'https://news.google.com/topics/CAAqHAgKIhZDQklTQ2pvSWJHOWpZV3hmZGpJb0FBUAE?hl=en');
+      'https://news.google.com/topics/CAAqHAgKIhZDQklTQ2pvSWJHOWpZV3hmZGpJb0FBUAE?hl=en'); // local news in english
   var titles = document.getElementsByTagName('h3'); // get titles
   var titleList = [];
   for (var i = 0; i < titles.length; i++) {
-    titleList.add(titles[i].text);
+    titleList.add(titles[i].text); // add titles to list
   }
   return titleList;
 }
 
-String getLocalNewsTitle(titles, index) {
-  if (titles.isEmpty) {
-    return ('No local news in your area');
-  }
-  return titles[index].text;
-}
-
 /// Parses the first paragraph of the first result for a query
 Future<String> wikipedia(String spacedQuery) async {
-  var query = spacedQuery.replaceAll(' ', '%20');
+  var query = spacedQuery.replaceAll(' ', '%20'); // html encoding
   print(query);
   Document document = await fetchDocument(
-      'https://en.wikipedia.org/w/index.php?search=' + query);
-  final searchResults = document.getElementsByClassName('searchresult');
+      'https://en.wikipedia.org/w/index.php?search=' +
+          query); // searches for query
+  final searchResults =
+      document.getElementsByClassName('searchresult'); // result list
   if (searchResults.isNotEmpty) {
-    final link =
-        searchResults[0].getElementsByTagName('href')[0].attributes['href'];
-    document = await fetchDocument(link);
+    final link = searchResults[0]
+        .getElementsByTagName('href')[0]
+        .attributes['href']; // get link of first result
+    document = await fetchDocument(link); // doc of first result
   } else if (document
       .getElementsByClassName('mw-search-nonefound')
       .isNotEmpty) {
-    //print('none');
+    // no results
     return ('Information about ' + spacedQuery + ' is not available');
   }
   print(document.body!.text);
 
-  var textParagraphs = document.getElementsByTagName('p');
+  var textParagraphs = document.getElementsByTagName('p'); // find paragraphs
   while (textParagraphs[0].localName != 'p' ||
       textParagraphs[0].className == 'mw-empty-elt') {
-    textParagraphs.removeAt(0);
+    // if non important info
+    textParagraphs.removeAt(0); // remove
   }
   var information = textParagraphs[0].text.replaceAllMapped(
-      RegExp(r'\[.*?\]'), (match) => ''); //remove [1] from the text
+      RegExp(r'\[.*?\]'), (match) => ''); //remove [1] references from the text
   //print(information);
   return (information);
 }
 
-///
+/// Parses the top news items for a given day, returning a list.
 Future<List> wikipediaNews() async {
   var stringList = [];
   Document document = await fetchDocument(
-      'https://en.wikipedia.org/wiki/Portal:Current_events');
+      'https://en.wikipedia.org/wiki/Portal:Current_events'); // fetch current events
   Element divItem = document
       .getElementsByClassName('p-current-events-headlines')[0]
-      .getElementsByTagName('ul')[0];
+      .getElementsByTagName('ul')[0]; // get only list in headlines
   List<dynamic> list = divItem.getElementsByTagName('li');
   for (int i = 0; i < list.length; i++) {
-    stringList.add(list[i].text);
+    stringList.add(list[i].text); // return list elements
   }
   return stringList;
 }
